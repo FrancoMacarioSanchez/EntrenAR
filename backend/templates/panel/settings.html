@@ -1,0 +1,13 @@
+{% extends "panel/base.html" %}
+{% block title %}Configuración{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Configuración del gimnasio</h1><p>Identidad, reglas de negocio e integraciones.</p></div>
+  <div class="row"><a class="btn" href="{% url 'panel:export' %}">Exportar todos los datos</a></div></div>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {% for title, fields in groups %}<div class="card"><h3 style="margin-bottom:14px">{{ title }}</h3>
+    {% if title == "Mercado Pago" %}<p class="muted">Pegá el <b>access token</b> de producción de tu cuenta de Mercado Pago (Tus integraciones → Credenciales). Los pagos se acreditan solos en <code>{{ mp_webhook }}</code>.</p>{% endif %}
+    {% if "ARCA" in title %}<p class="muted">EntrenAR envía cada pago facturable a tu servicio de facturación (por ejemplo FacturAR de CoreX) con un POST JSON. Si responde <code>{"status":"authorized","number":"…","cae":"…"}</code> el pago queda facturado.</p>{% endif %}
+    <div class="form-grid">{% for field in fields %}{% include "panel/_field.html" %}{% endfor %}</div></div>{% endfor %}
+  <div class="row" style="margin-top:18px"><button class="btn primary lg">Guardar configuración</button></div>
+</form>
+{% endblock %}

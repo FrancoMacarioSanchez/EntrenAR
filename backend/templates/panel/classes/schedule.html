@@ -1,0 +1,13 @@
+{% extends "panel/base.html" %}
+{% block title %}Clases{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Clases y reservas</h1><p>Semana del {{ monday|date:"d/m" }}. Los alumnos reservan desde la app.</p></div>
+  <div class="row"><a class="btn" href="?week={{ prev|date:'Y-m-d' }}">‹ Anterior</a><a class="btn" href="?">Hoy</a><a class="btn" href="?week={{ next|date:'Y-m-d' }}">Siguiente ›</a>
+  {% if perm.classes_manage %}<a class="btn primary" href="{% url 'panel:clases-abm_create' %}"><svg><use href="#i-plus"/></svg>Nueva clase</a>{% endif %}</div></div>
+<div class="week">{% for col in cols %}
+  <div class="wcol {% if col.today %}today{% endif %}"><h4>{{ col.label }} <small>{{ col.date|date:"d/m" }}</small></h4>
+    {% for it in col.items %}<a class="slot" style="background:{{ it.c.color }};{% if it.cancelled %}opacity:.45;text-decoration:line-through{% endif %}" href="{% url 'panel:class_day' it.c.pk it.date|date:'Y-m-d' %}">
+      <b>{{ it.c.start_time|time:"H:i" }} · {{ it.c.name }}</b><br>{{ it.c.trainer|default:"" }}<br><small style="color:#fff;opacity:.9">{{ it.booked }}/{{ it.c.capacity }} reservas</small></a>
+    {% empty %}<small>Sin clases</small>{% endfor %}</div>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% load static panel_tags %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Panel{% endblock %} · {{ gym_settings.display_name|default:"EntrenAR" }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'panel/panel.css' %}">
+  <style>:root{--brand: {{ gym_settings.primary_color|default:"#ff5a1f" }};}</style>
+  <script src="{% static 'panel/panel.js' %}"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body hx-boost="false">
+{% include "panel/_icons.html" %}
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="{% url 'panel:home' %}">
+      {% if gym_settings.logo %}<img src="{{ gym_settings.logo.url }}" alt="">{% else %}<span class="logo">{{ gym_settings.display_name|slice:":1" }}</span>{% endif %}
+      <span><b>{{ gym_settings.display_name }}</b><small>EntrenAR · CoreX</small></span>
+    </a>
+    <nav class="nav">
+      <a href="{% url 'panel:home' %}" class="{% nav_active 'dashboard' %}"><svg><use href="#i-home"/></svg>Inicio</a>
+      {% if perm.management %}<a href="{% url 'panel:management' %}" class="{% nav_active 'gerencia' %}"><svg><use href="#i-chart"/></svg>Gerencia</a>{% endif %}
+      {% if perm.checkin or perm.sell or perm.collect %}
+      <details class="nav-group" open><summary>Recepción</summary>
+        {% if perm.checkin %}<a href="{% url 'panel:checkin' %}" class="{% if request.resolver_match.url_name == 'checkin' %}active{% endif %}"><svg><use href="#i-scan"/></svg>Control de acceso</a>
+        <a href="{% url 'panel:qr_poster' %}" class="{% if request.resolver_match.url_name == 'qr_poster' %}active{% endif %}"><svg><use href="#i-scan"/></svg>QR de autoingreso</a>{% endif %}
+        {% if perm.sell %}<a href="{% url 'panel:sell' %}" class="{% if request.resolver_match.url_name == 'sell' %}active{% endif %}"><svg><use href="#i-card"/></svg>Vender membresía</a>{% endif %}
+        {% if perm.collect %}<a href="{% url 'panel:debts' %}" class="{% if request.resolver_match.url_name == 'debts' %}active{% endif %}"><svg><use href="#i-cash"/></svg>Cobrar / deudas</a>{% endif %}
+        {% if perm.cash %}<a href="{% url 'panel:cash' %}" class="{% if request.resolver_match.url_name == 'cash' %}active{% endif %}"><svg><use href="#i-cash"/></svg>Caja</a>{% endif %}
+      </details>{% endif %}
+      <details class="nav-group" open><summary>Socios</summary>
+        {% if perm.members_view %}<a href="{% url 'panel:members' %}" class="{% nav_active 'socios' %}"><svg><use href="#i-users"/></svg>Socios</a>{% endif %}
+        {% if perm.classes_view %}<a href="{% url 'panel:classes' %}" class="{% nav_active 'clases' %}"><svg><use href="#i-cal"/></svg>Clases y reservas</a>{% endif %}
+        {% if perm.routines_view %}<a href="{% url 'panel:rutinas_list' %}"><svg><use href="#i-dumbbell"/></svg>Rutinas</a>{% endif %}
+        {% if perm.exercises %}<a href="{% url 'panel:ejercicios_list' %}"><svg><use href="#i-list"/></svg>Ejercicios</a>{% endif %}
+        <a href="{% url 'panel:my_tasks' %}" class="{% if request.resolver_match.url_name == 'my_tasks' %}active{% endif %}"><svg><use href="#i-check"/></svg>Mis tareas</a>
+      </details>
+      {% if perm.crm or perm.campaigns or perm.templates %}
+      <details class="nav-group" {% if section == 'crm' %}open{% endif %}><summary>CRM</summary>
+        {% if perm.crm %}<a href="{% url 'panel:pipeline' %}" class="{% if request.resolver_match.url_name == 'pipeline' %}active{% endif %}"><svg><use href="#i-target"/></svg>Pipeline de leads</a>
+        <a href="{% url 'panel:retention' %}" class="{% if request.resolver_match.url_name == 'retention' %}active{% endif %}"><svg><use href="#i-heart"/></svg>Retención</a>{% endif %}
+        {% if perm.campaigns %}<a href="{% url 'panel:campanas_list' %}"><svg><use href="#i-send"/></svg>Campañas</a>{% endif %}
+        {% if perm.templates %}<a href="{% url 'panel:plantillas_list' %}"><svg><use href="#i-list"/></svg>Plantillas</a>{% endif %}
+      </details>{% endif %}
+      {% if perm.payments_list or perm.collect or perm.expenses or perm.reports %}
+      <details class="nav-group" {% if section == 'finanzas' %}open{% endif %}><summary>Finanzas</summary>
+        {% if perm.payments_list %}<a href="{% url 'panel:payments' %}" class="{% if request.resolver_match.url_name == 'payments' %}active{% endif %}"><svg><use href="#i-receipt"/></svg>Pagos</a>{% endif %}
+        {% if perm.collect %}<a href="{% url 'panel:cargos_list' %}"><svg><use href="#i-list"/></svg>Cargos</a>{% endif %}
+        {% if perm.expenses %}<a href="{% url 'panel:gastos_list' %}"><svg><use href="#i-card"/></svg>Gastos</a>{% endif %}
+        {% if perm.reports %}<a href="{% url 'panel:reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}"><svg><use href="#i-chart"/></svg>Reportes</a>{% endif %}
+      </details>{% endif %}
+      {% if perm.plans or perm.promotions or perm.settings or perm.staff or perm.payment_methods or perm.classes_manage or perm.audit or perm.subscription %}
+      <details class="nav-group" {% if section == 'config' %}open{% endif %}><summary>Administración</summary>
+        {% if perm.plans %}<a href="{% url 'panel:planes_list' %}"><svg><use href="#i-card"/></svg>Planes</a>{% endif %}
+        {% if perm.promotions %}<a href="{% url 'panel:promociones_list' %}"><svg><use href="#i-target"/></svg>Promociones</a>{% endif %}
+        {% if perm.classes_manage %}<a href="{% url 'panel:clases-abm_list' %}"><svg><use href="#i-cal"/></svg>Horarios de clases</a>{% endif %}
+        {% if perm.payment_methods %}<a href="{% url 'panel:medios-de-pago_list' %}"><svg><use href="#i-cash"/></svg>Medios de pago</a>{% endif %}
+        {% if perm.staff %}<a href="{% url 'panel:staff_list' %}"><svg><use href="#i-users"/></svg>Staff y permisos</a>{% endif %}
+        {% if perm.settings %}<a href="{% url 'panel:settings' %}"><svg><use href="#i-cog"/></svg>Configuración</a>{% endif %}
+        {% if perm.settings %}<a href="{% url 'panel:addons' %}" class="{% if request.resolver_match.url_name == 'addons' %}active{% endif %}"><svg><use href="#i-cog"/></svg>Complementos</a>{% endif %}
+        {% if perm.audit %}<a href="{% url 'panel:audit' %}"><svg><use href="#i-list"/></svg>Auditoría</a>{% endif %}
+        {% if perm.subscription %}<a href="{% url 'panel:subscription' %}"><svg><use href="#i-receipt"/></svg>Suscripción</a>{% endif %}
+      </details>{% endif %}
+      <a href="/app/" target="_blank"><svg><use href="#i-phone"/></svg>Abrir la app</a>
+    </nav>
+    <div class="side-foot">
+      <span class="avatar">{{ user.initials }}</span>
+      <div style="flex:1;min-width:0"><b style="font-size:13px">{{ user.get_full_name|default:user.username }}</b><br><small>{{ user.get_role_display }}</small></div>
+      <a class="btn ghost sm" href="{% url 'panel:password' %}" title="Contraseña"><svg><use href="#i-cog"/></svg></a>
+      <a class="btn ghost sm" href="{% url 'panel:logout' %}" title="Salir"><svg><use href="#i-logout"/></svg></a>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <button class="btn ghost burger" data-toggle-side><svg><use href="#i-menu"/></svg></button>
+      <form action="{% url 'panel:members' %}" class="search"><svg><use href="#i-search"/></svg><input class="input" name="q" placeholder="Buscar socio por nombre o DNI…" autocomplete="off"></form>
+      <div class="row" style="margin-left:auto">
+        {% if perm.members_edit %}<a class="btn primary sm" href="{% url 'panel:member_create' %}"><svg><use href="#i-plus"/></svg>Nuevo socio</a>{% endif %}
+        <a class="btn ghost sm" href="{% url 'panel:notifications' %}" title="Notificaciones"><svg><use href="#i-bell"/></svg></a>
+        <button class="btn ghost sm" onclick="toggleTheme()" title="Tema claro / oscuro"><svg><use href="#i-moon"/></svg></button>
+      </div>
+    </header>
+    {% if tenant.effective_state == 'trialing' and tenant.days_left is not None and tenant.days_left < 6 %}
+      <div class="alert warn" style="margin:16px 28px 0">Tu prueba gratis termina en {{ tenant.days_left }} días. <a href="{% url 'panel:subscription' %}"><b>Elegí un plan →</b></a></div>
+    {% elif tenant.effective_state == 'past_due' %}
+      <div class="alert bad" style="margin:16px 28px 0">Tu suscripción tiene un pago vencido. <a href="{% url 'panel:subscription' %}"><b>Regularizar →</b></a></div>
+    {% endif %}
+    <section class="content">{% block content %}{% endblock %}</section>
+  </main>
+</div>
+<div class="toasts">{% for m in messages %}<div class="toast {{ m.tags }}">{{ m }}</div>{% endfor %}</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

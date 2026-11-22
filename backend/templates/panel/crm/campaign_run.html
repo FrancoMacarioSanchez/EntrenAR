@@ -1,0 +1,10 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ c.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="{% url 'panel:campanas_list' %}"><small>← Campañas</small></a><h1>{{ c.name }}</h1>
+  <p>{{ c.get_segment_display }} · {{ c.template.get_channel_display }} · {% if c.sent_at %}última vez {{ c.sent_at|date:"d/m/Y H:i" }} ({{ c.sent_count }}){% else %}nunca enviada{% endif %}</p></div></div>
+<div class="card"><h3>Mensaje</h3><p style="white-space:pre-line">{{ c.template.body }}</p>
+  <form method="post">{% csrf_token %}<button class="btn primary" data-confirm="¿Ejecutar la campaña?">{% if c.template.channel == 'whatsapp' %}Generar links de WhatsApp{% else %}Enviar ahora{% endif %}</button></form></div>
+{% if rows %}<div class="card"><h3 style="margin-bottom:10px">{{ rows|length }} mensajes listos — hacé clic en cada uno para enviarlo</h3>
+  {% for r in rows %}<div class="list-item"><span><b>{{ r.name }}</b><br><small>{{ r.text|truncatechars:110 }}</small></span><a class="btn sm" target="_blank" href="{{ r.link }}" onclick="this.classList.add('success')"><svg><use href="#i-wa"/></svg>Enviar</a></div>{% endfor %}</div>{% endif %}
+{% endblock %}

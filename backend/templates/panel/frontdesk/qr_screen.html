@@ -1,0 +1,77 @@
+{% load static %}<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ingreso · {{ gym_settings.display_name }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+:root{--brand: {{ gym_settings.primary_color|default:"#ff5a1f" }}}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#07080b;color:#fff;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.wrap{height:100%;display:grid;grid-template-columns:1.1fr .9fr;gap:4vw;align-items:center;padding:5vh 5vw;position:relative}
+.glow{position:absolute;width:70vw;height:70vw;border-radius:50%;background:var(--brand);filter:blur(140px);opacity:.28;left:-25vw;top:-30vw;animation:f 12s ease-in-out infinite}
+@keyframes f{50%{transform:translate(8vw,6vh) scale(1.1)}}
+.left{position:relative;display:flex;flex-direction:column;align-items:center;gap:3vh}
+h1{font-size:clamp(34px,5vw,84px);margin:0;letter-spacing:-.045em;line-height:.95;text-align:center}
+h1 span{color:var(--brand)}
+.qr{background:#fff;padding:2.2vh;border-radius:34px;box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 0 10px rgba(255,255,255,.06);transition:transform .4s}
+.qr svg{width:min(48vh,36vw);height:min(48vh,36vw);display:block}
+.qr.swap{transform:scale(.96)}
+.bar{width:min(48vh,36vw);height:8px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--brand);border-radius:9px;transform-origin:left;transition:transform 1s linear}
+.pin{font-size:clamp(16px,1.6vw,26px);opacity:.85}.pin b{font-family:ui-monospace,monospace;letter-spacing:.2em;font-size:1.6em;color:#fff;margin-left:8px}
+.hint{opacity:.7;font-size:clamp(14px,1.4vw,22px)}
+.right{position:relative;display:flex;flex-direction:column;gap:2vh}
+.count{font-size:clamp(14px,1.3vw,20px);opacity:.75}.count b{font-size:clamp(40px,5vw,80px);display:block;color:#fff;opacity:1;letter-spacing:-.04em}
+.list{display:flex;flex-direction:column;gap:1.4vh}
+.item{display:flex;align-items:center;gap:16px;padding:1.6vh 1.6vw;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);animation:in .5s cubic-bezier(.2,1.2,.4,1) both}
+.item.new{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.5)}
+.item.bad{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.45)}
+.av{width:56px;height:56px;border-radius:18px;background:var(--brand);display:grid;place-items:center;font-weight:900;font-size:20px;object-fit:cover;flex:none}
+.item b{font-size:clamp(16px,1.6vw,24px);display:block}.item small{opacity:.7}
+@keyframes in{from{opacity:0;transform:translateX(40px)}}
+.welcome{position:fixed;inset:0;display:grid;place-items:center;background:rgba(7,8,11,.82);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .3s}
+.welcome.on{opacity:1}.welcome div{text-align:center;transform:scale(.9);transition:transform .4s cubic-bezier(.2,1.4,.4,1)}.welcome.on div{transform:none}
+.welcome h2{font-size:clamp(40px,7vw,120px);margin:0;letter-spacing:-.05em}.welcome p{font-size:clamp(18px,2vw,30px);opacity:.8}
+.fs{position:fixed;right:18px;bottom:18px;background:rgba(255,255,255,.1);color:#fff;border:0;border-radius:12px;padding:10px 14px;font:inherit;cursor:pointer}
+@media (orientation:portrait){.wrap{grid-template-columns:1fr;align-content:center}.qr svg,.bar{width:min(70vw,48vh)}}
+</style></head><body>
+<div class="wrap"><div class="glow"></div>
+  <div class="left">
+    <h1>Escaneá y <span>entrá</span></h1>
+    <div class="qr" id="qr"></div>
+    <div class="bar"><span id="bar"></span></div>
+    <div class="hint">Abrí la cámara del celular · el código cambia cada 30 segundos</div>
+    <div class="pin">o escribí en la app <b id="pin">······</b></div>
+  </div>
+  <div class="right">
+    <div class="count">Ingresos de hoy<b id="count">0</b></div>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+<div class="welcome" id="welcome"><div><h2 id="wname"></h2><p id="wtext"></p></div></div>
+<button class="fs" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">Pantalla completa</button>
+<script>
+let lastUrl="", seen=null, nextAt=0;
+function draw(url){const q=qrcode(0,'M');q.addData(url);q.make();const el=document.getElementById('qr');el.classList.add('swap');
+  setTimeout(()=>{el.innerHTML=q.createSvgTag({cellSize:8,margin:0,scalable:true});el.classList.remove('swap')},200);}
+function esc(s){return String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+async function tick(){
+  try{
+    const r=await fetch("{% url 'panel:qr_screen_token' %}",{credentials:"same-origin"});
+    if(r.status!==200){document.querySelector('.hint').textContent="Sesión vencida: volvé a ingresar al panel.";return;}
+    const d=await r.json();
+    if(d.url!==lastUrl){lastUrl=d.url;draw(d.url);
+      const now=Date.now()/1000;const left=d.window-(now%d.window);nextAt=Date.now()+left*1000;
+      const bar=document.getElementById('bar');bar.style.transition='none';bar.style.transform='scaleX(1)';
+      requestAnimationFrame(()=>{bar.style.transition='transform '+left+'s linear';bar.style.transform='scaleX(0)'});}
+    document.getElementById('count').textContent=d.count;
+    if(d.pin)document.getElementById('pin').textContent=d.pin.slice(0,3)+' '+d.pin.slice(3);
+    const key=d.last.map(x=>x.name+x.at).join('|');
+    if(seen!==null && d.last.length && key!==seen){const n=d.last[0];
+      if(n.allowed){document.getElementById('wname').textContent='¡Hola, '+n.first+'!';document.getElementById('wtext').textContent='Buen entrenamiento 💪';}
+      else{document.getElementById('wname').textContent=n.first;document.getElementById('wtext').textContent=n.reason+' · pasá por recepción';}
+      const w=document.getElementById('welcome');w.classList.add('on');setTimeout(()=>w.classList.remove('on'),2600);}
+    if(key!==seen){document.getElementById('list').innerHTML=d.last.map((x,i)=>`<div class="item ${i===0&&seen!==null?'new':''} ${x.allowed?'':'bad'}">${x.photo?`<img class="av" src="${esc(x.photo)}">`:`<span class="av">${esc(x.initials)}</span>`}<div><b>${esc(x.name)}</b><small>${esc(x.at)} · ${x.allowed?'Ingresó':esc(x.reason)}</small></div></div>`).join('');}
+    seen=key;
+  }catch(e){}
+}
+tick();setInterval(tick,3000);
+</script></body></html>

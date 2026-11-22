@@ -1,0 +1,21 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Reportes{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Reportes</h1><p>{{ d_from|date:"d/m/Y" }} al {{ d_to|date:"d/m/Y" }}</p></div>
+  <form class="row"><input class="input" type="date" name="from" value="{{ d_from|date:'Y-m-d' }}" style="width:auto"><input class="input" type="date" name="to" value="{{ d_to|date:'Y-m-d' }}" style="width:auto"><button class="btn">Ver</button>
+  <a class="btn" href="?from={{ d_from|date:'Y-m-d' }}&to={{ d_to|date:'Y-m-d' }}&export=pagos">Exportar pagos</a></form></div>
+<div class="grid g4">
+  <div class="card kpi"><div class="label">Ingresos</div><div class="value">{{ income|money }}</div></div>
+  <div class="card kpi"><div class="label">Gastos</div><div class="value">{{ expenses|money }}</div></div>
+  <div class="card kpi"><div class="label">Resultado</div><div class="value" style="color:{% if net < 0 %}var(--bad){% else %}var(--ok){% endif %}">{{ net|money }}</div></div>
+  <div class="card kpi"><div class="label">Ingresos al gimnasio</div><div class="value">{{ checkins_total }}</div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3 style="margin-bottom:10px">Por medio de pago</h3>{% for r in by_method %}<div style="margin-bottom:10px"><div class="row between"><span>{{ r.method__name }} <small>({{ r.c }})</small></span><b class="mono">{{ r.t|money }}</b></div><div class="progress"><span style="width:{{ r.t|pct:income }}%"></span></div></div>{% empty %}<div class="empty">Sin datos</div>{% endfor %}</div>
+  <div class="card"><h3 style="margin-bottom:10px">Por concepto</h3>{% for r in by_kind %}<div style="margin-bottom:10px"><div class="row between"><span>{{ r.label }}</span><b class="mono">{{ r.t|money }}</b></div><div class="progress"><span style="width:{{ r.t|pct:income }}%"></span></div></div>{% empty %}<div class="empty">Sin datos</div>{% endfor %}</div>
+  <div class="card"><h3 style="margin-bottom:10px">Membresías vendidas por plan</h3>{% for r in by_plan %}<div class="list-item"><span>{{ r.plan__name }}</span><span><b>{{ r.c }}</b> · <small class="mono">{{ r.t|money }}</small></span></div>{% empty %}<div class="empty">Sin ventas</div>{% endfor %}</div>
+  <div class="card"><h3 style="margin-bottom:10px">Gastos por categoría</h3>{% for r in by_cat %}<div style="margin-bottom:10px"><div class="row between"><span>{{ r.label }}</span><b class="mono">{{ r.t|money }}</b></div><div class="progress"><span style="width:{{ r.t|pct:expenses }}%;background:var(--bad)"></span></div></div>{% empty %}<div class="empty">Sin gastos</div>{% endfor %}</div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Asistencia diaria</h3>
+  <div class="bars" style="height:160px">{% with mx=days|dictsortreversed:"value"|first %}{% for d in days %}<div class="b" title="{{ d.label }}: {{ d.value }}"><span style="height:{{ d.value|pct:mx.value }}%"></span>{% if days|length < 35 %}<small>{{ d.label|slice:":2" }}</small>{% endif %}</div>{% endfor %}{% endwith %}</div></div>
+{% endblock %}

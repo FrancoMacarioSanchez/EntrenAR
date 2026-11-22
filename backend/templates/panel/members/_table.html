@@ -1,0 +1,22 @@
+{% load panel_tags %}
+<div class="table-wrap">
+<table class="t">
+  <thead><tr><th>Socio</th><th>DNI</th><th>Plan</th><th>Vence</th><th>Estado</th><th>Entrenador</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}{% with m=r.m %}
+  <tr>
+    <td><a class="person" href="{% url 'panel:member_detail' m.pk %}">{% if m.photo %}<img class="avatar" src="{{ m.photo.url }}">{% else %}<span class="avatar">{{ m.initials }}</span>{% endif %}<span><b>{{ m.full_name }}</b><small>{{ m.phone|default:m.email }}</small></span></a></td>
+    <td class="mono">{{ m.dni|default:"—" }}</td>
+    <td>{{ r.membership.plan.name|default:"—" }}</td>
+    <td class="mono">{{ r.membership.end_date|date:"d/m/Y"|default:"—" }}</td>
+    <td><span class="badge {{ r.state.1 }}">{{ r.state.0 }}</span>{% if m.status != 'active' %} <span class="badge muted">{{ m.get_status_display }}</span>{% endif %}</td>
+    <td>{{ m.trainer|default:"—" }}</td>
+    <td class="actions"><a class="btn sm" href="{% url 'panel:collect' m.pk %}">Cobrar</a> <a class="btn sm" href="{% url 'panel:sell' %}?member={{ m.pk }}">Renovar</a></td>
+  </tr>{% endwith %}
+  {% empty %}<tr><td colspan="7"><div class="empty">No encontramos socios. <a href="{% url 'panel:member_create' %}" style="color:var(--brand)">Dar de alta →</a></div></td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% if page.paginator.num_pages > 1 %}<div class="pagination"><small>Página {{ page.number }} de {{ page.paginator.num_pages }}</small>
+  {% if page.has_previous %}<a class="btn sm" href="?{{ querystring }}&page={{ page.previous_page_number }}">‹</a>{% endif %}
+  {% if page.has_next %}<a class="btn sm" href="?{{ querystring }}&page={{ page.next_page_number }}">›</a>{% endif %}</div>{% endif %}

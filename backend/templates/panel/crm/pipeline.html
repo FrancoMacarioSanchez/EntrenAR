@@ -1,0 +1,22 @@
+{% extends "panel/base.html" %}
+{% block title %}Pipeline de leads{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>{% endblock %}
+{% block content %}
+{% csrf_token %}
+<div class="page-head"><div><h1>Pipeline de leads</h1><p>Arrastrá las tarjetas entre etapas. Cada movimiento queda registrado.</p></div>
+  <div class="row"><form class="search"><svg><use href="#i-search"/></svg><input class="input" name="q" value="{{ q }}" placeholder="Buscar lead"></form>
+    <a class="btn {% if request.GET.mine %}primary{% endif %}" href="?mine=1">Mis leads</a>
+    <a class="btn primary" href="{% url 'panel:leads_create' %}"><svg><use href="#i-plus"/></svg>Nuevo lead</a></div></div>
+<div class="kanban">
+  {% for st in stages %}<div class="kcol"><h4>{{ st.label }} <span class="badge" data-count>{{ st.count }}</span></h4>
+    <div class="kcards" data-stage="{{ st.code }}">
+      {% for l in st.items %}<div class="kcard {% if l.is_overdue %}overdue{% endif %}" data-move="{% url 'panel:lead_move' l.pk %}">
+        <a href="{% url 'panel:lead_detail' l.pk %}"><b>{{ l.name }}</b></a><br>
+        <small>{{ l.get_source_display }}{% if l.interest %} · {{ l.interest.name }}{% endif %}</small>
+        <div class="row between" style="margin-top:8px"><small>{% if l.next_contact %}📅 {{ l.next_contact|date:"d/m" }}{% endif %}</small><small>{{ l.assigned_to.first_name|default:"" }}</small></div>
+      </div>{% endfor %}
+    </div></div>{% endfor %}
+</div>
+<div class="card" style="margin-top:16px"><h3 style="margin-bottom:10px">Conversión por origen</h3>
+  <div class="grid g4">{% for s in sources %}<div><div class="row between"><b>{{ s.label }}</b><small>{{ s.won }}/{{ s.c }}</small></div><div class="progress" style="margin-top:6px"><span style="width:{{ s.rate }}%"></span></div><small>{{ s.rate }}% convierte</small></div>{% endfor %}</div></div>
+{% endblock %}

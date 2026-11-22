@@ -1,0 +1,153 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Tablero de gerencia{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.kc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;position:relative;overflow:hidden}
+.kc .l{font-size:12.5px;color:var(--ink-3);font-weight:650;display:flex;justify-content:space-between;gap:6px}
+.kc .v{font-size:26px;font-weight:850;letter-spacing:-.03em;margin-top:4px;line-height:1.1}
+.kc small{color:var(--ink-3)}
+.kc.good .v{color:var(--ok)}.kc.bad .v{color:var(--bad)}.kc.warn .v{color:var(--warn)}
+.kc .tip{cursor:help;opacity:.6}
+.sec-title{display:flex;align-items:center;gap:10px;margin:28px 0 12px}
+.sec-title h2{font-size:18px}.sec-title span{flex:1;height:1px;background:var(--line)}
+.chart-box{position:relative;height:260px}.chart-box.tall{height:320px}.chart-box.short{height:200px}
+.cohort td{text-align:center;font-weight:700;font-size:13px;padding:8px;border-radius:6px}
+.cohort th{font-size:11px;color:var(--ink-3);padding:6px}
+.period a{padding:7px 12px;border-radius:9px;font-weight:650;font-size:13px;color:var(--ink-3)}
+.period a.on{background:var(--brand);color:#fff}
+</style>{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Tablero de gerencia</h1><p>Indicadores para tomar decisiones · actualizado {% now "d/m/Y H:i" %}</p></div>
+  <div class="row period card" style="padding:5px">
+    <a href="?meses=6" class="{% if months == 6 %}on{% endif %}">6 meses</a>
+    <a href="?meses=12" class="{% if months == 12 %}on{% endif %}">12 meses</a>
+    <a href="?meses=24" class="{% if months == 24 %}on{% endif %}">24 meses</a>
+  </div>
+</div>
+
+<div class="sec-title"><h2>Negocio y retención</h2><span></span></div>
+<div class="kgrid">
+  <div class="kc"><div class="l">Socios activos</div><div class="v">{{ k.active }}</div><small>{% if k.active_delta >= 0 %}▲ +{{ k.active_delta }}{% else %}▼ {{ k.active_delta }}{% endif %} vs. mes anterior</small></div>
+  <div class="kc"><div class="l">MRR <span class="tip" title="Ingreso mensual recurrente: valor mensualizado de todas las membresías vigentes.">ⓘ</span></div><div class="v">{{ k.mrr|money }}</div><small>ingreso recurrente mensual</small></div>
+  <div class="kc"><div class="l">Ticket promedio (ARPU)</div><div class="v">{{ k.arpu|money }}</div><small>por socio activo / mes</small></div>
+  <div class="kc"><div class="l">Valor de vida (LTV) <span class="tip" title="ARPU dividido por el churn mensual promedio de los últimos 3 meses.">ⓘ</span></div><div class="v">{% if k.ltv %}{{ k.ltv|money }}{% else %}—{% endif %}</div><small>lo que deja un socio en promedio</small></div>
+  <div class="kc {% if k.churn and k.churn > 8 %}bad{% elif k.churn and k.churn > 5 %}warn{% else %}good{% endif %}"><div class="l">Churn mensual</div><div class="v">{% if k.churn is not None %}{{ k.churn|floatformat:1 }}%{% else %}—{% endif %}</div><small>promedio últimos 3 meses</small></div>
+  <div class="kc"><div class="l">Retención</div><div class="v">{% if k.retention is not None %}{{ k.retention|floatformat:1 }}%{% else %}—{% endif %}</div><small>socios que se quedan cada mes</small></div>
+  <div class="kc {% if k.renewal_rate and k.renewal_rate < 60 %}warn{% endif %}"><div class="l">Tasa de renovación</div><div class="v">{% if k.renewal_rate is not None %}{{ k.renewal_rate|floatformat:0 }}%{% else %}—{% endif %}</div><small>de las que vencieron en 30 días</small></div>
+  <div class="kc"><div class="l">Antigüedad promedio</div><div class="v">{{ k.avg_tenure|floatformat:1 }} meses</div><small>de los socios activos</small></div>
+  <div class="kc"><div class="l">Altas / bajas del mes</div><div class="v"><span style="color:var(--ok)">+{{ k.new_month }}</span> <span style="color:var(--bad)">−{{ k.lost_month|default:0 }}</span></div><small>socios nuevos vs. perdidos</small></div>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><div class="card-head"><h3>Socios activos, altas y bajas</h3></div><div class="chart-box"><canvas id="cMembers"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Churn mensual (%)</h3></div><div class="chart-box"><canvas id="cChurn"></canvas></div></div>
+</div>
+<div class="grid g3" style="margin-top:16px">
+  <div class="card"><div class="card-head"><h3>Estado de los socios</h3></div><div class="chart-box"><canvas id="cStates"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Planes vigentes</h3></div><div class="chart-box"><canvas id="cPlans"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Retención por mes de alta</h3><small class="muted">% que sigue activo</small></div>
+    <div class="table-wrap" style="margin:0"><table class="cohort" style="width:100%"><thead><tr><th>Alta</th><th>Socios</th>{% for i in "012345" %}<th>Mes {{ i }}</th>{% endfor %}</tr></thead><tbody>
+    {% for c in m.cohorts %}<tr><th style="text-align:left">{{ c.label }}</th><td>{{ c.size }}</td>{% for v in c.cells %}<td style="background:color-mix(in srgb, var(--ok) {{ v|default:0 }}%, var(--surface-2));{% if v > 55 %}color:#fff{% endif %}">{{ v|default:0 }}%</td>{% endfor %}</tr>
+    {% empty %}<tr><td colspan="8" class="muted">Sin altas en los últimos 6 meses.</td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+
+<div class="sec-title"><h2>Dinero</h2><span></span></div>
+<div class="kgrid">
+  <div class="kc"><div class="l">Ingresos del mes</div><div class="v">{{ k.revenue|money }}</div><small>{% if k.revenue_delta is not None %}{% if k.revenue_delta >= 0 %}▲{% else %}▼{% endif %} {{ k.revenue_delta|floatformat:1 }}% vs. mes anterior{% endif %}</small></div>
+  <div class="kc"><div class="l">Gastos del mes</div><div class="v">{{ k.expenses|money }}</div></div>
+  <div class="kc {% if k.net < 0 %}bad{% else %}good{% endif %}"><div class="l">Resultado</div><div class="v">{{ k.net|money }}</div><small>{% if k.margin is not None %}margen {{ k.margin|floatformat:0 }}%{% endif %}</small></div>
+  <div class="kc {% if k.collection_rate is not None and k.collection_rate < 80 %}warn{% endif %}"><div class="l">Cobranza del mes <span class="tip" title="Cobrado sobre lo que vencía este mes.">ⓘ</span></div><div class="v">{% if k.collection_rate is not None %}{{ k.collection_rate|floatformat:0 }}%{% else %}—{% endif %}</div></div>
+  <div class="kc {% if k.debt > 0 %}bad{% endif %}"><div class="l">Deuda pendiente</div><div class="v">{{ k.debt|money }}</div><small>{{ k.debtors }} socios con deuda vencida</small></div>
+  <div class="kc"><div class="l">Proyección 30 días</div><div class="v">{{ k.forecast|money }}</div><small>renovaciones + cargos a vencer</small></div>
+  <div class="kc"><div class="l">Pagos en efectivo</div><div class="v">{% if k.cash_share is not None %}{{ k.cash_share|floatformat:0 }}%{% else %}—{% endif %}</div><small>del total cobrado este mes</small></div>
+</div>
+<div class="grid g-side" style="margin-top:16px">
+  <div class="card"><div class="card-head"><h3>Ingresos, gastos y resultado</h3></div><div class="chart-box tall"><canvas id="cMoney"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Deuda por antigüedad</h3></div><div class="chart-box tall"><canvas id="cAging"></canvas></div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><div class="card-head"><h3>Cobros del mes por medio</h3></div><div class="chart-box"><canvas id="cMethods"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Gastos del mes por categoría</h3></div><div class="chart-box"><canvas id="cExpenses"></canvas></div></div>
+</div>
+
+<div class="sec-title"><h2>Uso del gimnasio y de la app</h2><span></span></div>
+<div class="kgrid">
+  <div class="kc"><div class="l">Visitas por socio</div><div class="v">{{ k.visits_per_member|floatformat:1 }}</div><small>últimos 30 días</small></div>
+  <div class="kc {% if k.at_risk %}warn{% endif %}"><a href="{% url 'panel:retention' %}"><div class="l">Socios en riesgo</div><div class="v">{{ k.at_risk }}</div><small>activos sin venir en 30 días →</small></a></div>
+  <div class="kc"><div class="l">Adopción de la app</div><div class="v">{{ k.app_adoption|default:0 }}%</div><small>socios activos con usuario</small></div>
+  <div class="kc"><div class="l">Registran entrenamientos</div><div class="v">{{ k.app_active|default:0 }}%</div><small>de los activos, últimos 30 días</small></div>
+  <div class="kc {% if k.routine_coverage is not None and k.routine_coverage < 50 %}warn{% endif %}"><div class="l">Con rutina asignada</div><div class="v">{{ k.routine_coverage|default:0 }}%</div></div>
+  <div class="kc"><div class="l">Ausentismo en clases</div><div class="v">{% if k.no_show is not None %}{{ k.no_show|floatformat:0 }}%{% else %}—{% endif %}</div><small>reservaron y no vinieron</small></div>
+</div>
+<div class="grid g3" style="margin-top:16px">
+  <div class="card"><div class="card-head"><h3>Frecuencia de visitas (30 días)</h3></div><div class="chart-box"><canvas id="cFreq"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Visitas por día de la semana</h3></div><div class="chart-box"><canvas id="cWeekday"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Visitas por mes</h3></div><div class="chart-box"><canvas id="cVisits"></canvas></div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><div class="card-head"><h3>Ocupación de clases (30 días)</h3></div><div class="chart-box tall"><canvas id="cOcc"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Perfil de los socios activos</h3></div>
+    <div class="grid g2"><div class="chart-box"><canvas id="cSex"></canvas></div><div class="chart-box"><canvas id="cAges"></canvas></div></div></div>
+</div>
+
+<div class="sec-title"><h2>Captación (últimos 90 días)</h2><span></span></div>
+<div class="grid g2">
+  <div class="card"><div class="card-head"><h3>Embudo de leads</h3><b>{{ k.conversion|default:0 }}% conversión</b></div><div class="chart-box"><canvas id="cFunnel"></canvas></div></div>
+  <div class="card"><div class="card-head"><h3>Origen de los leads</h3></div>
+    <div class="table-wrap"><table class="t"><thead><tr><th>Origen</th><th>Leads</th><th>Socios</th><th>Conversión</th></tr></thead><tbody>
+    {% for s in m.sources %}<tr><td><b>{{ s.label }}</b></td><td>{{ s.value }}</td><td>{{ s.won }}</td><td><div class="row"><div class="progress" style="flex:1"><span style="width:{{ s.rate|default:0 }}%"></span></div><b>{{ s.rate|default:0 }}%</b></div></td></tr>
+    {% empty %}<tr><td colspan="4"><div class="empty">Sin leads en el período.</div></td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+
+<div class="sec-title"><h2>Equipo de entrenadores (30 días)</h2><span></span></div>
+<div class="card"><div class="table-wrap"><table class="t"><thead><tr><th>Entrenador</th><th>Alumnos activos</th><th>Con rutina</th><th>Entrenamientos registrados</th><th>Récords de sus alumnos</th><th>Rutinas armadas</th></tr></thead><tbody>
+{% for t in m.trainers %}<tr><td><b>{{ t.name }}</b></td><td>{{ t.students }}</td><td><span class="badge {% if t.coverage is not None and t.coverage < 60 %}warn{% else %}ok{% endif %}">{{ t.with_routine }} · {{ t.coverage|default:0 }}%</span></td><td>{{ t.sessions }}</td><td>{{ t.prs }}</td><td>{{ t.routines_made }}</td></tr>
+{% empty %}<tr><td colspan="6"><div class="empty">No hay entrenadores cargados.</div></td></tr>{% endfor %}</tbody></table></div></div>
+{{ m|json_script:"mdata" }}
+{% endblock %}
+{% block scripts %}<script>
+(function(){
+  const D = JSON.parse(document.getElementById("mdata").textContent);
+  const css = getComputedStyle(document.documentElement);
+  const brand = css.getPropertyValue("--brand").trim() || "#ff5a1f";
+  const ink = css.getPropertyValue("--ink-3").trim(), line = css.getPropertyValue("--line").trim();
+  const PAL = [brand, "#3b82f6", "#22c55e", "#a855f7", "#f59e0b", "#ec4899", "#14b8a6", "#64748b", "#ef4444"];
+  Chart.defaults.font.family = "Inter, system-ui"; Chart.defaults.color = ink; Chart.defaults.borderColor = line;
+  Chart.defaults.plugins.legend.labels.boxWidth = 12; Chart.defaults.maintainAspectRatio = false;
+  const money = v => "$ " + Math.round(v).toLocaleString("es-AR");
+  const L = a => a.map(x => x.label), V = a => a.map(x => x.value);
+  const mk = (id, cfg) => { const el = document.getElementById(id); if (el) new Chart(el, cfg); };
+  const doughnut = (id, arr, colors) => mk(id, {type: "doughnut", data: {labels: L(arr), datasets: [{data: V(arr), backgroundColor: colors || PAL, borderWidth: 0}]}, options: {cutout: "62%", plugins: {legend: {position: "bottom"}}}});
+  const bar = (id, arr, opts = {}) => mk(id, {type: "bar", data: {labels: L(arr), datasets: [{data: V(arr), backgroundColor: opts.color || brand, borderRadius: 7}]},
+    options: {indexAxis: opts.horizontal ? "y" : "x", plugins: {legend: {display: false}, tooltip: {callbacks: {label: c => opts.money ? money(c.raw) : (c.raw + (opts.suffix || ""))}}},
+      scales: {[opts.horizontal ? "x" : "y"]: {beginAtZero: true, max: opts.max, ticks: {callback: v => opts.money ? money(v) : v + (opts.suffix || "")}}}}});
+  const S = D.series, labels = S.map(s => s.label);
+
+  mk("cMembers", {data: {labels, datasets: [
+    {type: "line", label: "Activos", data: S.map(s => s.active), borderColor: brand, backgroundColor: brand + "22", fill: true, tension: .35, yAxisID: "y"},
+    {type: "bar", label: "Altas", data: S.map(s => s.new), backgroundColor: "#22c55e", borderRadius: 5, yAxisID: "y2"},
+    {type: "bar", label: "Bajas", data: S.map(s => s.lost || 0), backgroundColor: "#ef4444", borderRadius: 5, yAxisID: "y2"}]},
+    options: {scales: {y: {beginAtZero: true, position: "left"}, y2: {beginAtZero: true, position: "right", grid: {display: false}}}}});
+  mk("cChurn", {type: "line", data: {labels, datasets: [{label: "Churn %", data: S.map(s => s.churn), borderColor: "#ef4444", backgroundColor: "#ef444422", fill: true, tension: .35, spanGaps: true}]},
+    options: {plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true, ticks: {callback: v => v + "%"}}}}});
+  doughnut("cStates", D.member_states, ["#22c55e", "#f59e0b", "#fb923c", "#ef4444", "#3b82f6", "#94a3b8"]);
+  doughnut("cPlans", D.by_plan, D.by_plan.map((p, i) => p.color || PAL[i % PAL.length]));
+  mk("cMoney", {data: {labels, datasets: [
+    {type: "bar", label: "Ingresos", data: S.map(s => s.revenue), backgroundColor: brand, borderRadius: 6},
+    {type: "bar", label: "Gastos", data: S.map(s => s.expenses), backgroundColor: "#94a3b8", borderRadius: 6},
+    {type: "line", label: "Resultado", data: S.map(s => s.net), borderColor: "#22c55e", backgroundColor: "#22c55e", tension: .3}]},
+    options: {plugins: {tooltip: {callbacks: {label: c => c.dataset.label + ": " + money(c.raw)}}}, scales: {y: {ticks: {callback: v => money(v)}}}}});
+  bar("cAging", D.aging, {money: true, horizontal: true, color: ["#94a3b8", "#f59e0b", "#fb923c", "#ef4444", "#991b1b"]});
+  doughnut("cMethods", D.by_method);
+  bar("cExpenses", D.expenses_by_cat, {money: true, color: "#64748b"});
+  bar("cFreq", D.frequency, {color: ["#ef4444", "#f59e0b", "#3b82f6", "#22c55e", "#16a34a"]});
+  bar("cWeekday", D.weekday);
+  bar("cVisits", S.map(s => ({label: s.label, value: s.visits})), {color: "#3b82f6"});
+  bar("cOcc", D.occupancy, {horizontal: true, suffix: "%", max: 100, color: "#a855f7"});
+  doughnut("cSex", D.sexes, ["#3b82f6", "#ec4899"]);
+  bar("cAges", D.ages, {color: "#14b8a6"});
+  bar("cFunnel", D.funnel, {horizontal: true, color: [brand + "55", brand + "88", brand + "bb", brand]});
+})();
+</script>{% endblock %}

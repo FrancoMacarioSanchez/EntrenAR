@@ -1,0 +1,90 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Complementos{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Complementos</h1><p>Funciones opcionales que se cobran aparte, según el uso.</p></div></div>
+
+<div class="card addon-card">
+  <div class="card-head">
+    <div class="row" style="gap:14px;align-items:center">
+      <span class="addon-ico">✦</span>
+      <div><h3 style="margin:0">Análisis de comidas con IA</h3>
+        <small class="muted">Los alumnos sacan una foto o escriben lo que comieron y la app calcula calorías y macros.</small></div>
+    </div>
+    {% if not addon.allowed %}<span class="badge">No disponible</span>
+    {% elif addon.active %}<span class="badge ok">Activo</span>
+    {% else %}<span class="badge warn">Desactivado</span>{% endif %}
+  </div>
+
+  {% if not addon.allowed %}
+    <p>Este complemento todavía no está habilitado para tu gimnasio. Pedile a CoreX que lo habilite y vas a poder activarlo desde acá.</p>
+    <p class="muted">Sin él, los alumnos igual registran sus comidas buscando los alimentos, con el código de barras o con sus comidas habituales.</p>
+
+  {% elif not addon.active %}
+    <div class="grid g3" style="margin:6px 0 16px">
+      <div class="kpi-mini"><small>Precio</small><b>{{ addon.price_per_1k_tokens|money }}</b><small>cada 1.000 tokens</small></div>
+      <div class="kpi-mini"><small>Un análisis usa en promedio</small><b>2.000 a 3.000</b><small>tokens (foto o texto)</small></div>
+      <div class="kpi-mini"><small>Se factura</small><b>A fin de mes</b><small>con tu suscripción, según lo usado</small></div>
+    </div>
+    <form method="post" class="stack">{% csrf_token %}<input type="hidden" name="action" value="activate">
+      <label class="row"><input type="checkbox" name="accept" class="check" required> Entiendo que CoreX me cobra el consumo de IA a fin de mes, a {{ addon.price_per_1k_tokens|money }} cada 1.000 tokens.</label>
+      <div class="row"><button class="btn primary">Activar complemento</button>
+        <small class="muted">Después podés elegir cuántos análisis por día tiene cada alumno y un tope de gasto mensual.</small></div>
+    </form>
+
+  {% else %}
+    <div class="grid g4" style="margin:6px 0 18px">
+      <div class="kpi-mini"><small>Gastado este mes</small><b>{{ spent|money }}</b>
+        {% if addon.monthly_cap %}<div class="progress" style="margin-top:6px"><span style="width:{% if cap_pct > 100 %}100{% else %}{{ cap_pct }}{% endif %}%"></span></div><small>{{ cap_pct }}% del tope de {{ addon.monthly_cap|money }}</small>{% else %}<small>sin tope mensual</small>{% endif %}</div>
+      <div class="kpi-mini"><small>Proyección a fin de mes</small><b>{{ projected|money }}</b><small>al ritmo actual</small></div>
+      <div class="kpi-mini"><small>Análisis este mes</small><b>{{ usage.requests|default:0 }}</b><small>{% if avg_cost %}≈ {{ avg_cost|money }} cada uno{% else %}todavía sin uso{% endif %}</small></div>
+      <div class="kpi-mini"><small>Tokens este mes</small><b class="mono">{{ usage.tokens|default:0 }}</b><small>{{ addon.price_per_1k_tokens|money }} cada 1.000</small></div>
+    </div>
+    {% if cap_pct is not None and cap_pct >= 100 %}<div class="alert bad">Llegaste al tope mensual: la IA está pausada para tus alumnos hasta el mes que viene. Podés subir el tope si querés reactivarla.</div>
+    {% elif cap_pct is not None and cap_pct >= 80 %}<div class="alert warn">Ya usaste el {{ cap_pct }}% del tope mensual.</div>{% endif %}
+
+    <form method="post" class="form-grid">{% csrf_token %}<input type="hidden" name="action" value="settings">
+      <div class="field"><label for="daily_limit">Análisis por alumno por día</label>
+        <select class="input select" name="daily_limit" id="daily_limit">{% for n in limits %}<option value="{{ n }}" {% if n == addon.effective_daily_limit %}selected{% endif %}>{{ n }}</option>{% endfor %}</select>
+        <span class="help">Máximo permitido: {{ addon.max_daily_limit }}. A un alumno en particular se le puede dar otro límite desde su ficha.</span></div>
+      <div class="field"><label for="monthly_cap">Tope de gasto mensual (ARS)</label>
+        <input class="input" name="monthly_cap" id="monthly_cap" inputmode="decimal" value="{{ addon.monthly_cap|default_if_none:'' }}" placeholder="Sin tope">
+        <span class="help">Al llegar, la IA se pausa hasta el mes siguiente. Vacío = sin tope.</span></div>
+      <div class="field wide row"><button class="btn primary">Guardar</button></div>
+    </form>
+
+    <div class="grid g2" style="margin-top:18px">
+      <div><h4 style="margin-bottom:8px">Quién más la usa este mes</h4>
+        <div class="table-wrap"><table class="t"><thead><tr><th>Socio</th><th>Análisis</th><th>Costo</th></tr></thead><tbody>
+        {% for t in top %}<tr><td><a href="{% url 'panel:member_detail' t.member_id %}">{{ t.member__first_name }} {{ t.member__last_name }}</a></td><td class="mono">{{ t.n }}</td><td class="mono">{{ t.cost|money }}</td></tr>
+        {% empty %}<tr><td colspan="3"><div class="empty">Todavía nadie la usó este mes.</div></td></tr>{% endfor %}
+        </tbody></table></div></div>
+      <div><h4 style="margin-bottom:8px">Alumnos con un límite propio</h4>
+        <div class="table-wrap"><table class="t"><thead><tr><th>Socio</th><th>Límite</th></tr></thead><tbody>
+        {% for p in custom %}<tr><td><a href="{% url 'panel:member_detail' p.member_id %}">{{ p.member.full_name }}</a></td><td>{% if p.ai_daily_limit == 0 %}<span class="badge">Sin IA</span>{% else %}{{ p.ai_daily_limit }} por día{% endif %}</td></tr>
+        {% empty %}<tr><td colspan="2"><div class="empty">Todos usan el límite del gimnasio.</div></td></tr>{% endfor %}
+        </tbody></table></div></div>
+    </div>
+
+    <form method="post" style="margin-top:18px">{% csrf_token %}<input type="hidden" name="action" value="deactivate">
+      <button class="btn sm danger" data-confirm="¿Desactivar el análisis con IA? Tus alumnos van a seguir pudiendo cargar comidas a mano.">Desactivar complemento</button></form>
+  {% endif %}
+</div>
+
+{% if history %}
+<div class="card" style="margin-top:16px"><h3 style="margin-bottom:12px">Meses anteriores</h3>
+  <div class="table-wrap"><table class="t"><thead><tr><th>Mes</th><th>Análisis</th><th>Tokens</th><th>Precio cada 1.000</th><th>Importe</th><th>Estado</th></tr></thead><tbody>
+  {% for h in history %}<tr><td>{{ h.month|date:"F Y"|capfirst }}</td><td class="mono">{{ h.requests }}</td><td class="mono">{{ h.tokens }}</td>
+    <td class="mono">{% if h.price_per_1k_tokens is not None %}{{ h.price_per_1k_tokens|money }}{% else %}{{ addon.price_per_1k_tokens|money }}{% endif %}</td>
+    <td class="mono"><b>{{ h.shown_amount|money }}</b></td>
+    <td>{% if h.status == 'open' %}<span class="badge warn">A cerrar</span>{% elif h.status == 'sent' %}<span class="badge ok">Facturado</span>{% else %}<span class="badge">Cerrado</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endif %}
+
+<style>
+  .addon-ico { width:46px; height:46px; border-radius:14px; display:grid; place-items:center; font-size:22px; color:#fff; background:var(--brand); flex:none; }
+  .kpi-mini { display:flex; flex-direction:column; gap:2px; padding:12px 14px; border-radius:12px; background:var(--surface-2, #f6f6f4); }
+  .kpi-mini b { font-size:20px; }
+  .kpi-mini small { color:var(--ink-3, #6b7280); }
+</style>
+{% endblock %}

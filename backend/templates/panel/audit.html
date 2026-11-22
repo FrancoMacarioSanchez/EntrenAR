@@ -1,0 +1,8 @@
+{% extends "panel/base.html" %}
+{% block title %}Auditoría{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Auditoría</h1><p>Últimas 300 acciones del staff.</p></div></div>
+<div class="card"><div class="table-wrap"><table class="t"><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>
+{% for l in logs %}<tr><td class="mono">{{ l.created_at|date:"d/m/Y H:i" }}</td><td>{{ l.user|default:"Sistema" }}</td><td><span class="badge">{{ l.action }}</span></td><td>{{ l.description }}</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "admin/base_site.html" %}{% load humanize %}
+{% block extrastyle %}{{ block.super }}
+<style>
+.cx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:12px 0 20px}
+.cx-kpi{border:1px solid var(--hairline-color);border-radius:10px;padding:12px 14px;background:var(--body-bg)}
+.cx-kpi small{display:block;color:var(--body-quiet-color);font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.cx-kpi b{display:block;font-size:22px;margin-top:4px}
+.cx-kpi span{font-size:12px;color:var(--body-quiet-color)}
+.cx-pos{color:#15803d}.cx-neg{color:#b91c1c}
+.cx-bars{display:flex;gap:18px;align-items:flex-end;height:150px;padding:8px 4px;border-bottom:1px solid var(--hairline-color)}
+.cx-bars div{flex:1;display:flex;gap:3px;align-items:flex-end;height:100%}
+.cx-bars i{flex:1;display:block;border-radius:4px 4px 0 0;min-height:2px}
+.cx-legend{display:flex;gap:18px;font-size:12px;margin:6px 0 20px}.cx-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+.cx-months{display:flex;gap:18px;font-size:11px;color:var(--body-quiet-color);padding:4px}.cx-months span{flex:1;text-align:center}
+table.cx{width:100%}table.cx td.n,table.cx th.n{text-align:right;white-space:nowrap}
+.cx-note{background:var(--darkened-bg);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:13px}
+.cx-warn{background:#fef3c7;color:#78350f}
+</style>{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Inicio</a> › Costos y facturación</div>{% endblock %}
+{% block content %}
+<form method="get" style="display:flex;gap:10px;align-items:center;margin-bottom:6px">
+  <label for="mes"><b>Mes</b></label>
+  <select name="mes" id="mes" onchange="this.form.submit()">
+    {% for m in months %}<option value="{{ m|date:'Y-m' }}" {% if m == report.month %}selected{% endif %}>{{ m|date:"F Y"|capfirst }}</option>{% endfor %}
+  </select>
+  <a class="button" href="?mes={{ report.month|date:'Y-m' }}&csv=1">Exportar CSV</a>
+  <a class="button" href="{% url 'admin:tenants_infracost_changelist' %}">Costos fijos</a>
+  <a class="button" href="{% url 'admin:tenants_aiusagemonth_changelist' %}">Cierres de IA</a>
+</form>
+{% if report.current %}<div class="cx-note">Mes en curso: el consumo de IA es <b>estimado</b> con el precio vigente. Se congela el día 1 con <code>close_ai_billing</code>.</div>{% endif %}
+{% if report.pending_close %}<div class="cx-note cx-warn">{{ report.pending_close|length }} gimnasio(s) con consumo de IA sin cerrar en este mes. Cerralos en <a href="{% url 'admin:tenants_aiusagemonth_changelist' %}?status__exact=open">Cierres de IA</a> para que el Hub facture el importe definitivo.</div>{% endif %}
+
+<div class="cx-grid">
+  <div class="cx-kpi"><small>A facturar</small><b>$ {{ t.total|floatformat:"0g" }}</b><span>{{ t.paying }} gimnasio(s) con abono</span></div>
+  <div class="cx-kpi"><small>Abonos</small><b>$ {{ t.plan_fee|floatformat:"0g" }}</b><span>planes activos</span></div>
+  <div class="cx-kpi"><small>IA a facturar</small><b>$ {{ t.ai_billed|floatformat:"0g" }}</b><span>{{ t.requests|intcomma }} análisis · {{ t.tokens|intcomma }} tokens</span></div>
+  <div class="cx-kpi"><small>Costo Google</small><b>$ {{ t.google|floatformat:"0g" }}</b><span>margen IA {% if t.ai_margin_pct is not None %}{{ t.ai_margin_pct }} %{% else %}—{% endif %}</span></div>
+  <div class="cx-kpi"><small>Costos fijos</small><b>$ {{ t.infra|floatformat:"0g" }}</b><span>{% if t.cost_per_gym %}$ {{ t.cost_per_gym|floatformat:"0g" }} por gimnasio{% else %}cargalos en Costos fijos{% endif %}</span></div>
+  <div class="cx-kpi"><small>Resultado</small><b class="{% if t.result >= 0 %}cx-pos{% else %}cx-neg{% endif %}">$ {{ t.result|floatformat:"0g" }}</b><span>{% if t.result_pct is not None %}{{ t.result_pct }} % de lo facturado{% endif %}</span></div>
+</div>
+
+<h2>Últimos 6 meses</h2>
+<div class="cx-bars">{% for s in series %}<div title="{{ s.month|date:'F Y' }}: ingresos $ {{ s.income|floatformat:'0g' }} · costos $ {{ s.costs|floatformat:'0g' }}"><i style="height:{{ s.income_h }}%;background:#2563eb"></i><i style="height:{{ s.costs_h }}%;background:#f97316"></i></div>{% endfor %}</div>
+<div class="cx-months">{% for s in series %}<span>{{ s.month|date:"M y" }}</span>{% endfor %}</div>
+<div class="cx-legend"><span><i style="background:#2563eb"></i>A facturar (abonos + IA)</span><span><i style="background:#f97316"></i>Costos (Google + fijos)</span></div>
+
+<h2>Por gimnasio</h2>
+<table class="cx">
+<thead><tr><th>Gimnasio</th><th>Estado</th><th>Plan</th><th class="n">Abono</th><th class="n">Análisis</th><th class="n">Tokens</th><th class="n">IA a facturar</th><th class="n">Costo Google</th><th class="n">Margen IA</th><th class="n">Total</th></tr></thead>
+<tbody>
+{% for r in report.rows %}<tr>
+  <td><a href="{% url 'admin:tenants_gym_change' r.gym.pk %}">{{ r.gym.name }}</a><br><small style="color:var(--body-quiet-color)">{{ r.gym.schema_name }}</small></td>
+  <td>{{ r.state }}</td>
+  <td>{{ r.plan.name|default:"—" }}</td>
+  <td class="n">$ {{ r.plan_fee|floatformat:"0g" }}</td>
+  <td class="n">{{ r.requests|intcomma }}</td>
+  <td class="n">{{ r.tokens|intcomma }}</td>
+  <td class="n">$ {{ r.ai_billed|floatformat:"2g" }}{% if r.ai_estimated %} <small title="estimado, sin cerrar">*</small>{% endif %}{% if not r.ai_enabled and not r.tokens %}<br><small style="color:var(--body-quiet-color)">IA apagada</small>{% endif %}</td>
+  <td class="n">$ {{ r.google|floatformat:"2g" }}</td>
+  <td class="n">{% if r.ai_margin_pct is not None %}{{ r.ai_margin_pct }} %{% else %}—{% endif %}</td>
+  <td class="n"><b>$ {{ r.total|floatformat:"0g" }}</b></td>
+</tr>{% empty %}<tr><td colspan="10">Todavía no hay gimnasios.</td></tr>{% endfor %}
+</tbody>
+<tfoot><tr><th colspan="3">Total</th><th class="n">$ {{ t.plan_fee|floatformat:"0g" }}</th><th class="n">{{ t.requests|intcomma }}</th><th class="n">{{ t.tokens|intcomma }}</th><th class="n">$ {{ t.ai_billed|floatformat:"0g" }}</th><th class="n">$ {{ t.google|floatformat:"0g" }}</th><th class="n">{% if t.ai_margin_pct is not None %}{{ t.ai_margin_pct }} %{% endif %}</th><th class="n">$ {{ t.total|floatformat:"0g" }}</th></tr></tfoot>
+</table>
+
+<h2 style="margin-top:24px">Costos fijos del mes</h2>
+<table class="cx">
+<thead><tr><th>Concepto</th><th>Categoría</th><th class="n">Importe</th><th class="n">Parte de EntrenAR</th><th class="n">En pesos</th></tr></thead>
+<tbody>{% for r in report.infra %}<tr><td><a href="{% url 'admin:tenants_infracost_change' r.cost.pk %}">{{ r.cost.name }}</a>{% if r.cost.notes %}<br><small>{{ r.cost.notes }}</small>{% endif %}</td><td>{{ r.cost.get_category_display }}</td><td class="n">{{ r.cost.currency }} {{ r.cost.amount|floatformat:"2g" }}</td><td class="n">{{ r.cost.share_pct }} %</td><td class="n">$ {{ r.ars|floatformat:"0g" }}</td></tr>
+{% empty %}<tr><td colspan="5">Sin costos fijos cargados. <a href="{% url 'admin:tenants_infracost_add' %}">Agregar el VPS, backups, email…</a></td></tr>{% endfor %}</tbody>
+</table>
+
+<h2 style="margin-top:24px">Conexión con CoreX Hub</h2>
+{% if hub.enabled %}
+<p>Cola de envíos: <b>{{ hub.pendientes }}</b> pendiente(s){% if hub.fallidos %}, <b class="cx-neg">{{ hub.fallidos }} rechazado(s)</b> (<a href="{% url 'admin:tenants_hubevent_changelist' %}?sent=no">ver</a>){% endif %}. Último envío: {{ hub.ultimo_envio|default:"nunca" }}.</p>
+{% else %}<div class="cx-note cx-warn">El Hub no está configurado (HUB_URL / HUB_INGEST_TOKEN): las métricas y el consumo de IA no se están enviando para facturar.</div>{% endif %}
+<p style="color:var(--body-quiet-color);font-size:12px">Costo de Google estimado con {{ gemini.model }}: USD {{ gemini.in }} / {{ gemini.out }} por millón de tokens (entrada/salida) y $ {{ gemini.fx }} por dólar. Ajustalo en el .env (GEMINI_PRICE_INPUT_USD, GEMINI_PRICE_OUTPUT_USD, AI_FX_ARS).</p>
+{% endblock %}

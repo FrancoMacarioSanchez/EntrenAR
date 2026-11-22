@@ -1,0 +1,17 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Cobrar / deudas{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Cobrar / deudas</h1><p>{% if perm.see_finance %}Total pendiente: <b>{{ grand_total|money }}</b> · {% endif %}{{ rows|length }} socios con saldo</p></div>
+  <div class="row"><a class="btn {% if request.GET.overdue %}primary{% endif %}" href="?overdue=1">Solo vencidas</a><a class="btn" href="?">Todas</a><a class="btn" href="{% url 'panel:cargos_create' %}">+ Cargo manual</a></div></div>
+<div class="card">
+  <form class="search" style="margin-bottom:12px"><svg><use href="#i-search"/></svg><input class="input" name="q" value="{{ q }}" placeholder="Buscar socio"></form>
+  <div class="table-wrap"><table class="t"><thead><tr><th>Socio</th><th>Conceptos</th><th>Más antigua</th><th>Total</th><th></th></tr></thead><tbody>
+  {% for r in rows %}<tr><td><a class="person" href="{% url 'panel:member_detail' r.member.pk %}?tab=cobros"><span class="avatar">{{ r.member.initials }}</span><span><b>{{ r.member.full_name }}</b><small>{{ r.member.phone }}</small></span></a></td>
+    <td>{% for c in r.charges %}<small style="display:block">{{ c.concept }} — {{ c.balance|money }}</small>{% endfor %}</td>
+    <td><span class="badge {% if r.overdue %}bad{% else %}warn{% endif %}">{{ r.oldest|date:"d/m/Y" }}</span></td>
+    <td class="mono"><b>{{ r.total|money }}</b></td>
+    <td class="actions">{% if r.wa %}<a class="btn sm" target="_blank" href="{{ r.wa }}"><svg><use href="#i-wa"/></svg>Recordar</a>{% endif %}<a class="btn sm primary" href="{% url 'panel:collect' r.member.pk %}">Cobrar</a></td></tr>
+  {% empty %}<tr><td colspan="5"><div class="empty">¡No hay deudas! 🎉</div></td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "public/base.html" %}
+{% block title %}Crear mi gimnasio · EntrenAR{% endblock %}
+{% block content %}
+<section style="padding:20px 6vw 60px;display:grid;place-items:center">
+<form method="post" class="card stack" style="max-width:640px;width:100%">{% csrf_token %}
+  <h1>Creá tu gimnasio</h1><p class="muted">Prueba gratis, sin tarjeta. En un minuto tenés tu panel y tu app listos.</p>
+  <div class="form-grid">{% for field in form %}{% include "panel/_field.html" %}{% endfor %}</div>
+  <button class="btn primary lg">Crear mi gimnasio</button>
+  <small class="muted">Al crear la cuenta preparamos tu base de datos; puede tardar unos segundos.</small>
+</form></section>
+{% endblock %}

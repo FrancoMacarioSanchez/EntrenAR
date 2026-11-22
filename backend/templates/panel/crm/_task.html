@@ -1,0 +1,7 @@
+<div class="list-item" id="task-{{ t.pk }}" {% if t.done %}style="opacity:.5;text-decoration:line-through"{% endif %}>
+  <span class="row"><button class="btn sm {% if t.done %}success{% endif %}" hx-post="{% url 'panel:task_toggle' t.pk %}" hx-target="#task-{{ t.pk }}" hx-swap="outerHTML">✓</button>
+    <span><b>{{ t.title }}</b><br><small>Vence {{ t.due_date|date:"d/m" }}{% if t.due_date < today %} · <span style="color:var(--bad)">atrasada</span>{% endif %} · {{ t.get_priority_display }}
+      {% if t.member %} · <a href="{% url 'panel:member_detail' t.member_id %}" style="color:var(--brand)">{{ t.member }}</a>{% endif %}
+      {% if t.lead %} · <a href="{% url 'panel:lead_detail' t.lead_id %}" style="color:var(--brand)">{{ t.lead }}</a>{% endif %}</small></span></span>
+  <a class="btn sm ghost" href="{% url 'panel:tareas_update' t.pk %}">Editar</a>
+</div>

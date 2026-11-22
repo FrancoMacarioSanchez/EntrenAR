@@ -1,0 +1,24 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Cobrar a {{ member.full_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="{% url 'panel:member_detail' member.pk %}"><small>← {{ member.full_name }}</small></a><h1>Registrar pago</h1></div></div>
+{% if not cash_open %}<div class="alert warn">La caja está cerrada. El pago se registra igual, pero no queda asociado a una caja. <a href="{% url 'panel:cash' %}"><b>Abrir caja →</b></a></div>{% endif %}
+<form method="post" class="grid g2">{% csrf_token %}
+  <div class="card">
+    <h3 style="margin-bottom:10px">Cargos pendientes</h3>
+    {% for c in pending %}<label class="list-item" style="cursor:pointer"><span class="row"><input type="checkbox" class="check" name="charges" value="{{ c.pk }}" data-bal="{{ c.balance|stringformat:'s' }}" checked> <span><b>{{ c.concept }}</b><br><small>Vence {{ c.due_date|date:"d/m/Y" }} · {{ c.get_status_display }}</small></span></span><b class="mono">{{ c.balance|money }}</b></label>
+    {% empty %}<div class="empty">No tiene cargos pendientes. El pago queda como saldo a favor.</div>{% endfor %}
+    {% if pending %}<div class="list-item"><b>Total pendiente</b><b class="mono" style="font-size:20px">{{ total|money }}</b></div>{% endif %}
+  </div>
+  <div class="card stack">
+    {% for field in form %}{% include "panel/_field.html" %}{% endfor %}
+    <button class="btn primary lg">Registrar pago</button>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}<script>
+document.querySelectorAll("input[name=charges]").forEach(c => c.addEventListener("change", () => {
+  let t = 0; document.querySelectorAll("input[name=charges]:checked").forEach(x => t += parseFloat(x.dataset.bal));
+  document.getElementById("id_amount").value = t.toFixed(2);
+}));
+</script>{% endblock %}

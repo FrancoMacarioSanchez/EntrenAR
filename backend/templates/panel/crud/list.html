@@ -1,0 +1,23 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}{{ crud.title_plural }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ crud.title_plural }}</h1>{% if crud.help_text %}<p>{{ crud.help_text }}</p>{% endif %}</div>
+  <div class="row">
+    {% if crud.export_csv %}<a class="btn" href="?{{ querystring }}&export=csv">Exportar CSV</a>{% endif %}
+    {% if create_url %}<a class="btn primary" href="{{ create_url }}"><svg><use href="#i-plus"/></svg>Nuevo</a>{% endif %}
+  </div>
+</div>
+<div class="card">
+  <form class="row" hx-get="{{ list_url }}" hx-target="#crud-table" hx-trigger="input delay:300ms, change" hx-push-url="true" style="margin-bottom:14px">
+    {% if crud.search_fields %}<div class="search" style="flex:1;min-width:220px"><svg><use href="#i-search"/></svg><input class="input" name="q" value="{{ q }}" placeholder="Buscar…"></div>{% endif %}
+    {% for f in filters %}
+      <select class="input select" name="{{ f.name }}" style="width:auto;min-width:160px">
+        <option value="">{{ f.label }}: todos</option>
+        {% for v, l in f.choices %}<option value="{{ v }}" {% if active|get:f.name == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    {% endfor %}
+  </form>
+  <div id="crud-table">{% include "panel/crud/_table.html" %}</div>
+</div>
+{% endblock %}

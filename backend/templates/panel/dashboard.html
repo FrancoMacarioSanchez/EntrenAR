@@ -1,0 +1,81 @@
+{% extends "panel/base.html" %}{% load panel_tags humanize %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ greeting }}, {{ user.first_name|default:user.username }} 👋</h1>
+    <p>{% now "l j \d\e F" %} · {{ d.in_gym_now }} personas entrenando ahora · {{ d.checkins_today }} ingresos hoy</p></div>
+  <div class="row">
+    {% if perm.checkin %}<a class="btn" href="{% url 'panel:qr_poster' %}"><svg><use href="#i-scan"/></svg>QR de autoingreso</a>
+    <a class="btn" href="{% url 'panel:checkin' %}"><svg><use href="#i-scan"/></svg>Control de acceso</a>{% endif %}
+    {% if perm.sell %}<a class="btn primary" href="{% url 'panel:sell' %}"><svg><use href="#i-card"/></svg>Vender membresía</a>{% endif %}
+  </div>
+</div>
+
+{% if perm.see_finance %}
+<div class="grid g4">
+  <div class="card kpi"><div class="label">Socios activos</div><div class="value">{{ d.active_members }}</div>
+    <small>Ticket promedio {{ d.arpu|money }}</small></div>
+  <div class="card kpi"><div class="label">Ingresos del mes</div><div class="value">{{ d.revenue_month|money }}</div>
+    {% if d.revenue_delta is not None %}<span class="delta {% if d.revenue_delta >= 0 %}up{% else %}down{% endif %}">{% if d.revenue_delta >= 0 %}▲{% else %}▼{% endif %} {{ d.revenue_delta }}% vs. mes anterior</span>{% endif %}</div>
+  <div class="card kpi"><div class="label">Resultado del mes</div><div class="value">{{ d.net_month|money }}</div>
+    <small>Gastos {{ d.expenses_month|money }}</small></div>
+  <div class="card kpi"><div class="label">Deuda vencida</div><div class="value" style="color:var(--bad)">{{ d.debt_total|money }}</div>
+    <a href="{% url 'panel:debts' %}?overdue=1"><small>Ver deudores →</small></a></div>
+</div>
+
+{% else %}
+<div class="grid g4">
+  <div class="card kpi"><div class="label">Socios activos</div><div class="value">{{ d.active_members }}</div></div>
+  <div class="card kpi"><div class="label">Ingresos al gimnasio hoy</div><div class="value">{{ d.checkins_today }}</div><small>{{ d.in_gym_now }} entrenando ahora</small></div>
+  <div class="card kpi"><div class="label">Entrenamientos esta semana</div><div class="value">{{ d.workouts_week }}</div><small>{{ d.prs_week }} récords</small></div>
+  <a class="card kpi" href="{% url 'panel:my_tasks' %}"><div class="label">Tareas pendientes</div><div class="value">{{ d.tasks_today }}</div></a>
+</div>
+{% endif %}
+<div class="grid g4" style="margin-top:16px">
+  <a class="card kpi" href="{% url 'panel:retention' %}"><div class="label">Vencen en los próximos días</div><div class="value">{{ d.expiring }}</div><small>Avisales por WhatsApp →</small></a>
+  <a class="card kpi" href="{% url 'panel:retention' %}#inactive"><div class="label">Activos que no vienen</div><div class="value">{{ d.inactive }}</div><small>Riesgo de abandono</small></a>
+  <a class="card kpi" href="{% url 'panel:pipeline' %}"><div class="label">Leads abiertos</div><div class="value">{{ d.leads_open }}</div><small>Conversión 90 días: {{ d.conversion|default:"—" }}{% if d.conversion is not None %}%{% endif %}</small></a>
+  <div class="card kpi"><div class="label">Churn del mes pasado</div><div class="value">{{ d.churn_rate }}%</div><small>{{ d.workouts_week }} entrenamientos y {{ d.prs_week }} récords esta semana</small></div>
+</div>
+
+{% if perm.see_finance %}<div class="grid g-side" style="margin-top:16px">
+  <div class="card">
+    <div class="card-head"><h3>Ingresos de los últimos 12 meses</h3>{% if perm.management %}<a class="btn sm" href="{% url 'panel:management' %}">Tablero de gerencia</a>{% endif %}</div>
+    <div class="bars">{% for m in d.revenue_series %}<div class="b" title="{{ m.label }}: {{ m.value|money }}"><span style="height:{{ m.pct }}%;animation-delay:{{ forloop.counter0 }}0ms"></span><small>{{ m.label }}</small></div>{% endfor %}</div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Planes activos</h3></div>
+    {% for p in d.plan_mix %}
+      <div style="margin-bottom:12px"><div class="row between"><span><span class="dot" style="background:{{ p.plan__color }}"></span> {{ p.plan__name }}</span><b>{{ p.c }}</b></div>
+      <div class="progress" style="margin-top:6px"><span style="width:{{ p.pct }}%;background:{{ p.plan__color }}"></span></div></div>
+    {% empty %}<div class="empty">Todavía no hay membresías activas.</div>{% endfor %}
+  </div>
+</div>{% endif %}
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card">
+    <div class="card-head"><h3>¿Cuándo viene la gente?</h3><small>últimos 60 días</small></div>
+    <div class="heat">
+      <span></span>{% for h in hours %}<small style="text-align:center">{% if forloop.counter0|divisibleby:2 %}{{ h }}{% endif %}</small>{% endfor %}
+      {% for r in heat %}<small>{{ r.day }}</small>{% for c in r.cells %}<i title="{{ r.day }} {{ c.h }} h: {{ c.v }}" {% if c.v %}style="background:color-mix(in srgb, var(--brand) {% widthratio c.o 1 100 %}%, transparent)"{% endif %}></i>{% endfor %}{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Altas de socios por mes</h3></div>
+    <div class="bars" style="height:150px">{% for m in d.growth_series %}<div class="b" title="{{ m.label }}: {{ m.value }}"><span style="height:{{ m.pct }}%;animation-delay:{{ forloop.counter0 }}0ms;background:linear-gradient(180deg,#22c55e,rgba(34,197,94,.4))"></span><small>{{ m.label }}</small></div>{% endfor %}</div>
+  </div>
+</div>
+
+<div class="grid g3" style="margin-top:16px">
+  {% if perm.payments_list %}<div class="card"><div class="card-head"><h3>Últimos pagos</h3><a href="{% url 'panel:payments' %}"><small>Ver todos</small></a></div>
+    {% for p in d.recent_payments %}<div class="list-item"><a href="{% url 'panel:member_detail' p.member_id %}"><b>{{ p.member.full_name }}</b><br><small>{{ p.method.name }} · {{ p.paid_at|naturaltime }}</small></a><b class="mono">{{ p.amount|money }}</b></div>
+    {% empty %}<div class="empty">Sin pagos todavía</div>{% endfor %}</div>{% endif %}
+  <div class="card"><div class="card-head"><h3>Últimos ingresos</h3><a href="{% url 'panel:checkin' %}"><small>Recepción</small></a></div>
+    {% for c in d.recent_checkins %}<div class="list-item"><span><b>{{ c.member.full_name }}</b><br><small>{{ c.created_at|naturaltime }}</small></span><span class="badge {% if c.allowed %}ok{% else %}bad{% endif %}">{% if c.allowed %}Ingresó{% else %}Rechazado{% endif %}</span></div>
+    {% empty %}<div class="empty">Sin ingresos</div>{% endfor %}</div>
+  <div class="card"><div class="card-head"><h3>🏆 Récords recientes</h3></div>
+    {% for r in d.recent_prs %}<div class="list-item"><span><b>{{ r.member.full_name }}</b><br><small>{{ r.exercise.name }} · {{ r.label }}</small></span><small>{{ r.achieved_at|naturaltime }}</small></div>
+    {% empty %}<div class="empty">Cuando los alumnos registren sus series, acá vas a ver sus récords.</div>{% endfor %}</div>
+</div>
+{% if d.tasks_today %}<div class="alert" style="margin-top:16px">Tenés <b>{{ d.tasks_today }}</b> tareas pendientes para hoy. <a href="{% url 'panel:my_tasks' %}"><b>Ver tareas →</b></a></div>{% endif %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "panel/base.html" %}{% load humanize %}
+{% block title %}{{ lead.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="{% url 'panel:pipeline' %}"><small>← Pipeline</small></a><h1>{{ lead.name }}</h1>
+  <p><span class="badge info">{{ lead.get_stage_display }}</span> {{ lead.get_source_display }} · {{ lead.phone }} {{ lead.email }}{% if lead.interest %} · Interés: {{ lead.interest }}{% endif %}</p></div>
+  <div class="row">{% if wa %}<a class="btn" target="_blank" href="{{ wa }}"><svg><use href="#i-wa"/></svg>WhatsApp</a>{% endif %}<a class="btn" href="{% url 'panel:leads_update' lead.pk %}">Editar</a></div></div>
+<div class="grid g-side">
+  <div class="stack">
+    <form method="post" class="card stack">{% csrf_token %}<input type="hidden" name="action" value="activity">
+      <h3>Registrar seguimiento</h3>
+      <div class="row"><select name="kind" class="input select" style="width:auto">{% for v, l in kinds %}{% if v != 'stage' %}<option value="{{ v }}">{{ l }}</option>{% endif %}{% endfor %}</select>
+        <label class="row"><small>Próximo contacto</small><input type="date" name="next_contact" class="input" style="width:auto"></label></div>
+      <textarea name="text" class="input" placeholder="¿Qué hablaron?" required></textarea><button class="btn primary">Guardar</button></form>
+    <div class="card"><h3 style="margin-bottom:10px">Historial</h3>
+      {% for a in activities %}<div class="list-item"><span><b>{{ a.get_kind_display }}</b> · {{ a.text }}<br><small>{{ a.by|default:"Sistema" }} · {{ a.created_at|naturaltime }}</small></span></div>{% empty %}<div class="empty">Sin actividad.</div>{% endfor %}</div>
+  </div>
+  <div class="stack">
+    {% if lead.converted_member %}<div class="card"><h3>✅ Convertido</h3><a class="btn primary" href="{% url 'panel:member_detail' lead.converted_member.pk %}" style="margin-top:10px">Ver socio</a></div>
+    {% else %}<form method="post" class="card stack">{% csrf_token %}<input type="hidden" name="action" value="convert"><h3>Convertir en socio</h3>
+      <input class="input" name="dni" placeholder="DNI (opcional)"><button class="btn success">Convertir y vender membresía</button></form>{% endif %}
+    <form method="post" class="card stack">{% csrf_token %}<input type="hidden" name="action" value="stage"><h3>Mover de etapa</h3>
+      <select name="stage" class="input select">{% for v, l in stages %}<option value="{{ v }}" {% if v == lead.stage %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><button class="btn">Mover</button></form>
+    {% if wa_templates %}<div class="card"><h3 style="margin-bottom:10px">Mensajes rápidos</h3>{% for t in wa_templates %}{% if t.link %}<a class="btn sm" style="margin:0 6px 6px 0" target="_blank" href="{{ t.link }}">{{ t.name }}</a>{% endif %}{% endfor %}</div>{% endif %}
+    <div class="card"><h3 style="margin-bottom:10px">Datos</h3>
+      <div class="list-item"><small>Responsable</small><span>{{ lead.assigned_to|default:"—" }}</span></div>
+      <div class="list-item"><small>Objetivo</small><span>{{ lead.goal|default:"—" }}</span></div>
+      <div class="list-item"><small>Clase de prueba</small><span>{{ lead.trial_date|date:"d/m H:i"|default:"—" }}</span></div>
+      <div class="list-item"><small>Próximo contacto</small><span>{{ lead.next_contact|date:"d/m/Y"|default:"—" }}</span></div>
+      <div class="list-item"><small>Creado</small><span>{{ lead.created_at|date:"d/m/Y" }}</span></div>
+      {% if lead.notes %}<p>{{ lead.notes|linebreaksbr }}</p>{% endif %}</div>
+  </div>
+</div>
+{% endblock %}

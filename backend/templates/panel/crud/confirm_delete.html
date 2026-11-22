@@ -1,0 +1,10 @@
+{% extends "panel/base.html" %}
+{% block title %}Eliminar{% endblock %}
+{% block content %}
+<form method="post" class="card" style="max-width:560px">{% csrf_token %}
+  <h2>¿Eliminar {{ crud.title|lower }}?</h2>
+  <p>Vas a eliminar <b>{{ obj }}</b>. Esta acción no se puede deshacer.</p>
+  {% if warning %}<div class="alert warn">{{ warning }}</div>{% endif %}
+  <div class="row"><button class="btn danger">Sí, eliminar</button><a class="btn ghost" href="{{ list_url }}">Cancelar</a></div>
+</form>
+{% endblock %}

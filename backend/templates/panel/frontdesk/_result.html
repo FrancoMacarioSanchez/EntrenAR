@@ -1,0 +1,29 @@
+{% load panel_tags %}
+{% if not_found %}
+  <div class="card result bad"><div class="big">No encontrado</div><p>No hay ningún socio con «{{ code }}».</p>
+  {% if matches %}<div class="stack" style="text-align:left">{% for m in matches %}
+    <form hx-post="{% url 'panel:checkin_submit' %}" hx-target="#result" class="list-item">{% csrf_token %}<input type="hidden" name="member_id" value="{{ m.pk }}">
+      <span><b>{{ m.full_name }}</b> <small>DNI {{ m.dni|default:"—" }}</small></span><button class="btn sm primary">Registrar ingreso</button></form>{% endfor %}</div>{% endif %}
+  </div>
+{% else %}
+  <div class="card result {% if allowed %}ok{% else %}bad{% endif %}">
+    {% if member.photo %}<img class="avatar lg" src="{{ member.photo.url }}">{% else %}<span class="avatar lg">{{ member.initials }}</span>{% endif %}
+    <div class="big">{% if allowed %}✅ ¡Bienvenido/a, {{ member.first_name }}!{% else %}⛔ Acceso denegado{% endif %}</div>
+    <h2 style="margin-top:6px">{{ member.full_name }}</h2>
+    <p style="font-size:17px;font-weight:600">{{ reason }}</p>
+    <div class="row" style="justify-content:center">
+      {% if membership %}<span class="badge">{{ membership.plan.name }} · vence {{ membership.end_date|date:"d/m/Y" }}</span>{% endif %}
+      {% if visits_left is not None %}<span class="badge info">Le quedan {{ visits_left }} ingresos</span>{% endif %}
+      {% if debt %}<span class="badge bad">Debe {{ debt|money }}</span>{% endif %}
+      {% if not member.medical_ok %}<span class="badge warn">Apto físico pendiente</span>{% endif %}
+    </div>
+    <div class="row" style="justify-content:center;margin-top:16px">
+      <a class="btn" href="{% url 'panel:member_detail' member.pk %}">Ver ficha</a>
+      {% if debt %}<a class="btn" href="{% url 'panel:collect' member.pk %}">Cobrar</a>{% endif %}
+      {% if not allowed %}
+        <a class="btn primary" href="{% url 'panel:sell' %}?member={{ member.pk }}">Renovar</a>
+        <form hx-post="{% url 'panel:checkin_submit' %}" hx-target="#result">{% csrf_token %}<input type="hidden" name="member_id" value="{{ member.pk }}"><input type="hidden" name="force" value="1"><button class="btn" data-confirm="¿Dejar pasar igual?">Dejar pasar igual</button></form>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

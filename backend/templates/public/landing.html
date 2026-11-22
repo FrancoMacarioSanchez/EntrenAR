@@ -1,0 +1,376 @@
+{% load static panel_tags %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EntrenAR · Software para gimnasios con app para alumnos y entrenadores</title>
+  <meta name="description" content="Software para gimnasios: socios, cuotas, cobros con Mercado Pago, facturación ARCA, CRM y permisos por empleado. App para alumnos y entrenadores con rutinas, récords y un avatar 3D que se moldea con sus medidas. 14 días gratis.">
+  <meta property="og:title" content="EntrenAR · Tu gimnasio en orden, tus alumnos progresando">
+  <meta property="og:description" content="Panel de gestión + app para alumnos y entrenadores. Probalo 14 días gratis.">
+  <meta property="og:image" content="{% static 'public/img/av_hero.webp' %}">
+  <meta name="theme-color" content="#0a0b0d">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'public/landing.css' %}">
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <a href="#" class="logo"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg></i><b>Entren<span>AR</span></b></a>
+  <div class="nav-links"><a href="#funciones">Funciones</a><a href="#avatar">Avatar 3D</a><a href="#app">La app</a><a href="#equipo">Equipo</a><a href="#precios">Precios</a><a href="#faq">Preguntas</a></div>
+  <a class="btn primary sm" href="{% url 'signup' %}">Probar gratis</a>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap hero-in">
+    <div>
+      <span class="kicker rv"><b>Nuevo</b> Avatar 3D que se moldea con las medidas de cada alumno</span>
+      <h1 class="disp rv d1">Tu gimnasio <span class="stroke">en orden.</span><br>Tus alumnos <em>progresando.</em></h1>
+      <p class="lead rv d2">Socios, cuotas, cobros con Mercado Pago, facturación y CRM en un panel. Y una app donde tus alumnos registran cada serie, baten récords y siguen su progreso, aunque no haya señal en el gimnasio.</p>
+      <div class="ctas rv d3">
+        <a class="btn primary" href="{% url 'signup' %}">Empezar prueba gratis <span class="arrow">→</span></a>
+        <a class="btn ghost" href="#app">Ver la app</a>
+      </div>
+      <div class="trust rv d3">
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>14 días gratis, sin tarjeta</span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>Sin descargar nada de las tiendas</span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>Hecho en Argentina</span>
+      </div>
+    </div>
+
+    <div class="stage rv d2">
+      <div class="phone p1"><div class="notch"></div><div class="scr">
+        <span class="tag">Día A · Empuje · 42:10</span>
+        <h4>Press de banca</h4>
+        <div class="ex"><small>4 × 6-10 · descanso 2:30</small>
+          <span class="sug">🔥 Completaste 10 reps: subí a 62,5 kg</span>
+          <div class="set done"><span class="n">1</span><span>60</span><span>10</span><span class="ok">✓</span></div>
+          <div class="set done"><span class="n">2</span><span>62,5</span><span>9</span><span class="ok">✓</span></div>
+          <div class="set"><span class="n">3</span><span>62,5</span><span style="color:#777">8</span><span>✓</span></div>
+          <div class="set"><span class="n">4</span><span>62,5</span><span style="color:#777">8</span><span>✓</span></div>
+        </div>
+        <div class="ex"><b>Elevaciones laterales</b><small>3 × 12-15 · al fallo</small>
+          <div class="set"><span class="n">1</span><span>8</span><span style="color:#777">15</span><span>✓</span></div></div>
+        <div class="rest"><span><small>Descanso</small><br>1:24</span><span>+15s</span></div>
+      </div></div>
+
+      <div class="phone p2"><div class="notch"></div><div class="scr body-scr">
+        <span class="tag">Mi cuerpo · 6/15 zonas</span>
+        <h4>Tocá para medir</h4>
+        <img class="fig-img" src="{% static 'public/img/av_hero.webp' %}" alt="Avatar 3D con anillos de medición en cuello, pecho, cintura, cadera, brazo y muslo" width="350" height="575">
+        <div class="chips"><i class="ok">✓ Cuello</i><i class="ok">✓ Pecho</i><i class="on">Cintura</i><i>Cadera</i></div>
+        <div class="res"><div><small style="color:#c9ced8">Grasa estimada · US Navy</small><br><b>16,8%</b></div><div style="text-align:right"><small style="color:#c9ced8">FFMI</small><br><b style="font-size:24px">21,2</b></div></div>
+      </div></div>
+
+      <div class="float f1"><span class="ic">🏆</span><div><b>¡Nuevo récord!</b>Press de banca · 62,5 kg × 9</div></div>
+      <div class="float f2"><span class="ic">✅</span><div><b>Martina ingresó</b>Escaneó el QR de la entrada</div></div>
+      <div class="float f3"><span class="ic">💳</span><div><b>Cuota acreditada</b>Mercado Pago · al instante</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee"><div class="track">
+  {% for i in "12" %}<span>Gimnasios</span><span>Boxes de cross training</span><span>Estudios de funcional</span><span>Pilates</span><span>Artes marciales</span><span>Spinning</span><span>Entrenamiento personalizado</span>{% endfor %}
+</div></div>
+
+<!-- NÚMEROS -->
+<section class="block">
+  <div class="wrap">
+    <span class="sec-k rv">Por qué EntrenAR</span>
+    <h2 class="disp sec-t rv d1">Menos planillas y persecución de cuotas. Más socios que se quedan.</h2>
+    <p class="sec-p rv d2">Un solo sistema para la recepción, la caja, el dueño y los entrenadores. Y una app que hace que tus alumnos quieran volver al día siguiente.</p>
+    <div class="nums rv d2">
+      <div><b data-count="90">0</b><em></em><small>ejercicios precargados, y sumás los tuyos</small></div>
+      <div><b><span data-count="6">0</span></b><small>fórmulas de composición corporal (US Navy, pliegues y más)</small></div>
+      <div><b><span data-count="30">0</span><em>+</em></b><small>permisos para decidir qué ve cada empleado</small></div>
+      <div><b>0</b><small>apps para descargar: se instala desde el navegador</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- BENTO -->
+<section class="block" id="funciones" style="padding-top:0">
+  <div class="wrap">
+    <span class="sec-k rv">Funciones</span>
+    <h2 class="disp sec-t rv d1">Todo lo que tu gimnasio necesita, sin pegar sistemas.</h2>
+    <div class="bento">
+      <div class="tile t-a rv">
+        <h3>CRM que convierte consultas en socios</h3>
+        <p>Pipeline de leads con arrastrar y soltar, recordatorios, conversión por origen y mensajes de WhatsApp listos para enviar a quienes están por vencer o dejaron de venir.</p>
+        <div class="vis pipe">
+          <div><small>Nuevo</small><i>Sofía G. · Instagram</i><i>Lucas P. · Web</i></div>
+          <div><small>Contactado</small><i>Agustina R.</i><i class="hot">Tomás D. · hoy</i></div>
+          <div><small>Clase de prueba</small><i class="hot">Camila F. · 19 h</i></div>
+          <div><small>Ganado</small><i>Martín S. ✓</i></div>
+        </div>
+      </div>
+      <div class="tile t-b rv d1">
+        <h3>Cobrás sin perseguir a nadie</h3>
+        <p>Links de Mercado Pago que se acreditan solos, caja, recargos y facturación ARCA.</p>
+        <div class="vis pay">
+          <div><span>Martina L. · Pase libre</span><b>$35.000</b></div>
+          <div><span>Diego R. · Trimestral</span><span class="st">Acreditado</span></div>
+          <div><span>Factura C 0001-00000231</span><span class="st">CAE OK</span></div>
+        </div>
+      </div>
+      <div class="tile t-c rv">
+        <h3>Ingreso con QR</h3>
+        <p>El socio escanea el QR de la entrada con su celular y listo. Valida cuota, deuda y apto físico.</p>
+        <div class="vis qrmini">
+          <svg viewBox="0 0 21 21" shape-rendering="crispEdges"><path fill="#111" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM9 0h1v2H9zM11 1h2v1h-2zM8 3h2v2H8zM11 4h1v3h-1zM9 8h3v1H9zM0 9h2v1H0zM3 8h2v2H3zM14 9h2v2h-2zM17 8h4v1h-4zM8 11h2v2H8zM12 11h3v1h-3zM18 11h3v2h-3zM9 14h2v3H9zM13 14h3v2h-3zM17 15h2v3h-2zM12 18h2v3h-2zM15 19h2v2h-2zM19 19h2v2h-2zM11 12h1v2h-1zM5 11h2v2H5z"/></svg>
+          <span class="big-check">✅ ¡Bienvenida, Martina!</span>
+        </div>
+      </div>
+      <div class="tile t-d rv d1">
+        <h3>Récords en vivo</h3>
+        <p>Cada serie se compara con el historial: peso máximo, 1RM estimado y más repeticiones.</p>
+        <div class="vis"><span class="pr">🏆 Sentadilla · 1RM est. 112 kg</span></div>
+      </div>
+      <div class="tile t-e rv d2">
+        <h3>Funciona sin señal</h3>
+        <p>El sótano del gimnasio no es problema: la app guarda todo en el celular y lo sincroniza sola cuando vuelve la conexión.</p>
+        <div class="vis" style="font-family:var(--display);font-size:46px;font-weight:800;letter-spacing:-.04em">Offline ✓</div>
+      </div>
+      <div class="tile t-f rv">
+        <h3>Reportes que se entienden</h3>
+        <p>Ingresos, churn, deuda, ticket promedio y a qué hora viene la gente.</p>
+        <div class="vis bars"><span style="height:40%;transition-delay:0ms"></span><span style="height:62%;transition-delay:60ms"></span><span style="height:50%;transition-delay:120ms"></span><span style="height:72%;transition-delay:180ms"></span><span style="height:66%;transition-delay:240ms"></span><span style="height:84%;transition-delay:300ms"></span><span style="height:78%;transition-delay:360ms"></span><span style="height:92%;transition-delay:420ms"></span><span style="height:70%;transition-delay:480ms"></span><span style="height:100%;transition-delay:540ms"></span></div>
+      </div>
+      <div class="tile t-g rv d1">
+        <h3>Clases con cupos y lista de espera</h3>
+        <p>Los alumnos reservan desde la app. Si alguien cancela, el siguiente en espera recibe el aviso.</p>
+        <div class="vis cal">
+          <i style="background:#f97316">08:00 Funcional</i><i style="background:#ef4444">19:00 Spinning</i><i style="background:#8b5cf6">20:00 Cross</i><i style="background:#10b981">10:00 Yoga</i><i style="background:#ec4899">09:00 GAP</i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AVATAR -->
+<section class="block" id="avatar">
+  <div class="wrap">
+    <span class="sec-k rv">Avatar 3D</span>
+    <h2 class="disp sec-t rv d1">Su cuerpo, en 3D.<br>Y cambia cuando ellos cambian.</h2>
+    <p class="sec-p rv d2">Cada alumno tiene un avatar que toma la forma de sus medidas reales: cintura, cadera, pecho, brazos y piernas. Cuando carga una medida nueva, el avatar cambia en el momento. Nada motiva más que ver el progreso.</p>
+    <div class="av-grid">
+      <div class="av-morph rv">
+        <figure><img src="{% static 'public/img/av_heavy.webp' %}" alt="Avatar con más grasa abdominal" loading="lazy"><figcaption>Enero</figcaption></figure>
+        <figure><img src="{% static 'public/img/av_thin.webp' %}" alt="Avatar más delgado" loading="lazy"><figcaption>Abril</figcaption></figure>
+        <figure class="mid"><img src="{% static 'public/img/av_muscle.webp' %}" alt="Avatar musculoso" loading="lazy"><figcaption>Agosto</figcaption></figure>
+      </div>
+      <div class="av-side">
+        <div class="av-card rv d1">
+          <img src="{% static 'public/img/av_sculpt.webp' %}" alt="Avatar femenino con la cadera marcada para moldear" loading="lazy">
+          <div>
+            <b>Se moldea como en un videojuego</b>
+            <span>Tocás una zona y arrastrás hacia afuera o hacia adentro. Hombre o mujer, tono de piel, musculatura y grasa corporal.</span>
+          </div>
+        </div>
+        <ul class="av-list rv d2">
+          <li><b>Medidas con un toque.</b> Toca la zona del cuerpo y carga el perímetro; la app le explica cómo medir.</li>
+          <li><b>Composición corporal.</b> % de grasa (US Navy o pliegues), masa magra y FFMI, con su evolución.</li>
+          <li><b>Sin fotos.</b> El avatar muestra el progreso sin exponer a nadie.</li>
+          <li><b>El entrenador lo ve.</b> Al tomarle medidas en el gimnasio, se cargan sobre el mismo avatar.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EQUIPO -->
+<section class="block" id="equipo" style="padding-top:20px">
+  <div class="wrap">
+    <span class="sec-k rv">Tu equipo</span>
+    <h2 class="disp sec-t rv d1">Cada uno ve lo que tiene que ver.</h2>
+    <p class="sec-p rv d2">El dueño decide, persona por persona, qué puede ver y hacer cada empleado. La recepción cobra y da de alta socios sin ver cuánto facturó el gimnasio en el mes.</p>
+    <div class="roles">
+      <div class="role rv"><span class="ic">👑</span><h3>Dueño</h3><p>Todo, más el staff y sus permisos, la suscripción y la exportación de datos.</p><div class="perm"><i class="y">Finanzas</i><i class="y">Permisos</i><i class="y">Reportes</i></div></div>
+      <div class="role rv d1"><span class="ic">📊</span><h3>Gerente</h3><p>Planes, precios, promociones, tablero de gerencia y configuración.</p><div class="perm"><i class="y">Planes</i><i class="y">Promos</i><i class="y">KPIs</i></div></div>
+      <div class="role rv d2"><span class="ic">🛎️</span><h3>Recepción</h3><p>Ingresos, socios, ventas, cobros y caja con cierre a ciegas.</p><div class="perm"><i class="y">Cobrar</i><i class="y">Caja</i><i class="n">Montos del mes</i></div></div>
+      <div class="role rv d3"><span class="ic">🏋️</span><h3>Entrenador</h3><p>Desde la app: sus alumnos, rutinas, medidas y las clases que tiene asignadas.</p><div class="perm"><i class="y">Rutinas</i><i class="y">Sus clases</i><i class="n">Cobros</i></div></div>
+    </div>
+    <div class="mgmt rv">
+      <div>
+        <h3>Tablero de gerencia</h3>
+        <p>Los números que importan para decidir, actualizados solos: cuánto entra por mes de forma recurrente, cuántos socios se van, cuánto vale cada socio y qué cohortes se quedan.</p>
+        <div class="kchips"><i>MRR</i><i>Churn</i><i>LTV</i><i>Ticket promedio</i><i>Retención por cohorte</i><i>Deuda por antigüedad</i><i>Proyección 30 días</i><i>Ocupación de clases</i><i>Embudo de leads</i><i>Desempeño de entrenadores</i></div>
+      </div>
+      <div class="promo">
+        <span class="tag">Promoción activa</span>
+        <b>Vuelta al gym · 20% OFF</b>
+        <small>Plan trimestral · solo socios nuevos · código VUELTA · quedan 18 usos</small>
+        <div class="pbar"><i style="width:64%"></i></div>
+        <small>32 vendidas · $ 1,8 M facturados</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<section class="block" id="app" style="background:linear-gradient(180deg,transparent,#0e0f13 20%,#0e0f13 80%,transparent)">
+  <div class="wrap">
+    <span class="sec-k rv">La app</span>
+    <h2 class="disp sec-t rv d1">Una app para que entrenen mejor. Y vuelvan.</h2>
+    <p class="sec-p rv d2">Se instala desde el navegador en Android y iPhone, con el logo y los colores de tu gimnasio.</p>
+    <div class="split">
+      <div class="rv">
+        <div class="tabs"><button class="on" data-tab="alumnos">Para alumnos</button><button data-tab="entrenadores">Para entrenadores</button></div>
+        <div class="feat-list on" data-list="alumnos">
+          <div class="feat"><span class="ic">🏋️</span><div><b>Registra cada serie</b><span>Kg, repeticiones, al fallo y RPE. Con lo que hizo la última vez y la sugerencia de cuándo subir peso.</span></div></div>
+          <div class="feat"><span class="ic">⏱️</span><div><b>Descanso cronometrado</b><span>El temporizador arranca solo, vibra y suena cuando toca la próxima serie.</span></div></div>
+          <div class="feat"><span class="ic">🧍</span><div><b>Su avatar 3D</b><span>Toma la forma de sus medidas y lo puede moldear. Ve su % de grasa, masa magra y evolución.</span></div></div>
+          <div class="feat"><span class="ic">🔥</span><div><b>Rachas, logros y ranking</b><span>Constancia que se ve y se festeja.</span></div></div>
+          <div class="feat"><span class="ic">📲</span><div><b>QR, cuota y clases</b><span>Ingresa escaneando, paga con Mercado Pago y reserva su lugar.</span></div></div>
+        </div>
+        <div class="feat-list" data-list="entrenadores">
+          <div class="feat"><span class="ic">🧩</span><div><b>Constructor de rutinas</b><span>Días, series, rango de reps, al fallo, kg, descanso, tempo, RPE y superseries.</span></div></div>
+          <div class="feat"><span class="ic">📋</span><div><b>Plantillas en un toque</b><span>Armás una vez y la asignás a todos los alumnos que quieras.</span></div></div>
+          <div class="feat"><span class="ic">🚨</span><div><b>Alertas inteligentes</b><span>Quién no entrena, quién no tiene rutina y a quién le toca cambiarla.</span></div></div>
+          <div class="feat"><span class="ic">📈</span><div><b>Progreso de cada alumno</b><span>Volumen semanal, historial por ejercicio, récords y medidas.</span></div></div>
+          <div class="feat"><span class="ic">💬</span><div><b>Feedback directo</b><span>Comentá cada entrenamiento y el alumno recibe la notificación.</span></div></div>
+          <div class="feat"><span class="ic">📅</span><div><b>Sus clases</b><span>Toma asistencia, anota alumnos, cambia el cupo o suspende una fecha avisando a los anotados.</span></div></div>
+        </div>
+      </div>
+      <div class="app-stage rv d1">
+        <div class="phone"><div class="notch"></div><div class="scr" style="padding-top:50px">
+          <span class="tag">Buenas tardes</span><h4 style="font-size:28px">Martín 👋</h4>
+          <div style="border-radius:20px;padding:18px;background:linear-gradient(135deg,var(--o),#7c2d12);margin-bottom:12px">
+            <span class="tag" style="color:#ffd9c7">Hoy te toca</span>
+            <div style="font-family:var(--display);font-size:24px;font-weight:800;margin:4px 0">Día B · Tirón</div>
+            <small style="opacity:.85">5 ejercicios · Hipertrofia PPL</small><br>
+            <span style="display:inline-block;margin-top:12px;background:#fff;color:#111;border-radius:12px;padding:8px 14px;font-weight:800">▶ Empezar</span>
+          </div>
+          <div class="ex" style="display:flex;justify-content:space-between;align-items:center"><div><b style="font-size:24px">🔥 7</b><small style="margin:0">semanas seguidas</small></div><div><b style="font-size:24px">🏆 18</b><small style="margin:0">récords</small></div><div><b style="font-size:24px">42 t</b><small style="margin:0">levantadas</small></div></div>
+          <span class="tag">Últimos récords</span>
+          <div style="display:flex;gap:8px;margin-top:8px"><div class="ex" style="flex:1"><b>Dominadas</b><small style="margin:0;color:var(--o2)">12 repeticiones</small></div><div class="ex" style="flex:1"><b>Remo</b><small style="margin:0;color:var(--o2)">70 kg × 8</small></div></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PANEL -->
+<section class="block" id="panel">
+  <div class="wrap">
+    <span class="sec-k rv">El panel</span>
+    <h2 class="disp sec-t rv d1">El dueño ve todo. La recepción resuelve en segundos.</h2>
+    <p class="sec-p rv d2">Ficha 360 de cada socio, control de acceso, ventas de membresías, caja y reportes, con modo claro y oscuro.</p>
+    <div class="browser rv">
+      <div class="bbar"><i></i><i></i><i></i><span>irongym.entrenar.com.ar</span></div>
+      <div class="bapp">
+        <div class="bside"><b>Iron Gym</b><div class="on">Inicio</div><div>Control de acceso</div><div>Vender membresía</div><div>Cobrar / deudas</div><div>Socios</div><div>Clases y reservas</div><div>Pipeline de leads</div><div>Retención</div><div>Reportes</div></div>
+        <div class="bmain">
+          <h5>Buenas tardes, Franco 👋</h5>
+          <div class="kpis"><div>Socios activos<b>312</b></div><div>Ingresos del mes<b>$ 9,8 M</b><em>▲ 12%</em></div><div>Vencen esta semana<b>27</b></div><div>Leads abiertos<b>41</b></div></div>
+          <div class="brow">
+            <div><b>Ingresos de los últimos 12 meses</b><div class="bars" style="margin-top:12px"><span style="height:48%;transition-delay:0ms"></span><span style="height:56%;transition-delay:50ms"></span><span style="height:52%;transition-delay:100ms"></span><span style="height:64%;transition-delay:150ms"></span><span style="height:60%;transition-delay:200ms"></span><span style="height:72%;transition-delay:250ms"></span><span style="height:70%;transition-delay:300ms"></span><span style="height:80%;transition-delay:350ms"></span><span style="height:86%;transition-delay:400ms"></span><span style="height:100%;transition-delay:450ms"></span><span style="height:82%;transition-delay:500ms"></span><span style="height:94%;transition-delay:550ms"></span></div></div>
+            <div><b>¿Cuándo viene la gente?</b><div class="heat">{% for a in "136853124687421368975321136864212469853" %}<i style="--a:.{{ a }}"></i>{% endfor %}{% for a in "124689357" %}<i style="--a:.{{ a }}"></i>{% endfor %}</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PASOS -->
+<section class="block" style="padding-top:40px">
+  <div class="wrap">
+    <span class="sec-k rv">Cómo empezar</span>
+    <h2 class="disp sec-t rv d1">En marcha hoy mismo.</h2>
+    <div class="steps">
+      <div class="step rv"><h3>Creá tu gimnasio</h3><p>Elegí tu subdominio y en un minuto tenés el panel y la app con tu logo y tus colores.</p></div>
+      <div class="step rv d1"><h3>Cargá planes y socios</h3><p>Definí tus planes, sumá a tu equipo y dale acceso a la app a cada socio con su DNI.</p></div>
+      <div class="step rv d2"><h3>Imprimí el QR</h3><p>Pegalo en la entrada: tus alumnos ingresan escaneándolo y empiezan a registrar sus entrenamientos.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRECIOS -->
+<section class="block" id="precios">
+  <div class="wrap">
+    <span class="sec-k rv">Precios</span>
+    <h2 class="disp sec-t rv d1">Planes simples. Probalo gratis.</h2>
+    <p class="sec-p rv d2">Todos los planes incluyen la app para alumnos y entrenadores, control de acceso con QR y actualizaciones.</p>
+    <div class="prices">
+      {% for p in plans %}
+      <div class="price rv {% if forloop.counter == 2 %}hl{% endif %} {% cycle '' 'd1' 'd2' %}">
+        {% if forloop.counter == 2 %}<span class="badge">El más elegido</span>{% endif %}
+        <h3>{{ p.name }}</h3>
+        <div class="amt">{{ p.price_monthly|money }}<small> /mes</small></div>
+        <ul>
+          <li>{% if p.max_members %}Hasta {{ p.max_members }} socios activos{% else %}Socios ilimitados{% endif %}</li>
+          <li>{% if p.max_staff %}{{ p.max_staff }} usuarios de staff{% else %}Staff ilimitado{% endif %}</li>
+          <li>App para alumnos y entrenadores con avatar 3D</li>
+          <li>Permisos a medida por empleado</li>
+          <li class="{% if p.features.mercadopago is False %}no{% endif %}">Cobros con Mercado Pago</li>
+          <li class="{% if p.features.crm is False %}no{% endif %}">CRM, retención y campañas</li>
+          <li class="{% if p.features.arca is False %}no{% endif %}">Facturación electrónica ARCA</li>
+        </ul>
+        <a class="btn {% if forloop.counter == 2 %}primary{% else %}ghost{% endif %}" href="{% url 'signup' %}?plan={{ p.pk }}">Empezar con {{ p.name }}</a>
+      </div>
+      {% empty %}
+      <div class="price hl"><h3>Prueba gratis</h3><p style="color:#aeb5c1">Creá tu gimnasio y probá todas las funciones.</p><a class="btn primary" href="{% url 'signup' %}">Empezar</a></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="block" id="faq" style="padding-top:40px">
+  <div class="wrap">
+    <span class="sec-k rv">Preguntas frecuentes</span>
+    <h2 class="disp sec-t rv d1">Lo que nos suelen preguntar.</h2>
+    <div class="faq">
+      <details class="rv"><summary>¿Mis alumnos tienen que descargar algo de Play Store o App Store?</summary><p>No. EntrenAR es una app web progresiva (PWA): se abre desde el navegador y se instala en la pantalla de inicio con un toque, en Android y en iPhone. Lleva el nombre y los colores de tu gimnasio.</p></details>
+      <details class="rv"><summary>¿Funciona si en el gimnasio no hay señal?</summary><p>Sí. Las series y las mediciones se guardan en el celular y se sincronizan solas cuando vuelve la conexión.</p></details>
+      <details class="rv"><summary>¿Cómo funciona el ingreso con QR?</summary><p>Imprimís el QR desde el panel y lo pegás en la entrada. El socio lo escanea con la cámara, se abre la app y queda registrado su ingreso si tiene la cuota al día. Para más seguridad podés exigir ubicación o usar una pantalla con un QR que cambia cada 30 segundos.</p></details>
+      <details class="rv"><summary>¿Puedo cobrar con Mercado Pago y facturar?</summary><p>Sí. Cargás tus credenciales de Mercado Pago y cada cuota tiene su link de pago, que se acredita solo. Los pagos facturables se envían a tu servicio de facturación electrónica ARCA.</p></details>
+      <details class="rv"><summary>¿Qué tan precisa es la composición corporal?</summary><p>Es una estimación. Usamos US Navy con cinta métrica y, si tenés plicómetro, Jackson-Pollock de 3 o 7 pliegues, que es más preciso. También se puede cargar el dato de una balanza de bioimpedancia.</p></details>
+      <details class="rv"><summary>¿Puedo elegir qué ve cada empleado?</summary><p>Sí. El dueño activa «personalizar permisos» en cada empleado y elige entre más de 30 permisos: ver montos, anular pagos, aplicar descuentos, ver la caja, editar planes y más. El menú de cada uno muestra solo lo que puede usar.</p></details>
+      <details class="rv"><summary>¿Cómo funciona el avatar 3D?</summary><p>Cada alumno elige hombre o mujer, tono de piel, musculatura y grasa corporal, y puede moldear cada zona arrastrando sobre el cuerpo. Si activa «reflejar mis medidas», el avatar toma la forma de los perímetros que carga. No se suben fotos.</p></details>
+      <details class="rv"><summary>¿Cuánto dura la prueba gratis?</summary><p>14 días con todas las funciones y sin tarjeta. Al terminar elegís un plan; si no seguís, podés exportar todos tus datos.</p></details>
+      <details class="rv"><summary>¿Mis datos son míos?</summary><p>Siempre. Cada gimnasio tiene su base separada y podés exportar todos tus datos cuando quieras, incluso si dejás de usar el sistema.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="wrap" style="padding-bottom:40px">
+  <div class="cta rv">
+    <h2 class="disp">Probalo 14 días gratis.</h2>
+    <p>Creá tu cuenta, cargá tus planes y mañana tus alumnos ya están entrenando con la app.</p>
+    <a class="btn light" href="{% url 'signup' %}">Crear mi gimnasio gratis <span class="arrow">→</span></a>
+  </div>
+</section>
+
+<footer><div class="wrap foot">
+  <a href="#" class="logo"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg></i><b>Entren<span>AR</span></b></a>
+  <span>Un producto de CoreX · Software SaaS hecho en Argentina</span>
+</div></footer>
+
+<script>
+(() => {
+  const nav = document.getElementById("nav");
+  addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 30), { passive: true });
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add("in");
+    e.target.querySelectorAll("[data-count]").forEach((el) => {
+      const to = +el.dataset.count, t0 = performance.now();
+      const step = (t) => { const k = Math.min(1, (t - t0) / 1200); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + (el.closest(".nums") && to === 90 && k === 1 ? "+" : ""); if (k < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    });
+    io.unobserve(e.target);
+  }), { threshold: 0.15 });
+  document.querySelectorAll(".rv, .tile").forEach((el) => io.observe(el));
+  document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("on", x === b));
+    document.querySelectorAll(".feat-list").forEach((l) => l.classList.toggle("on", l.dataset.list === b.dataset.tab));
+  }));
+})();
+</script>
+</body>
+</html>

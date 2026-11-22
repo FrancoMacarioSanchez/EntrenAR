@@ -1,0 +1,37 @@
+{% extends "panel/base.html" %}
+{% block title %}Control de acceso{% endblock %}
+{% block head %}<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Control de acceso</h1><p>Escaneá el QR del socio (lector o cámara) o escribí su DNI. Hoy: <b id="count">{{ count_today }}</b> ingresos.</p></div>
+  <div class="row"><a class="btn" href="{% url 'panel:qr_poster' %}"><svg><use href="#i-scan"/></svg>QR para que se escaneen</a>
+  <button class="btn" id="camBtn" type="button"><svg><use href="#i-scan"/></svg>Usar cámara</button></div></div>
+<div class="checkin-box">
+  <div class="stack">
+    <form class="card" hx-post="{% url 'panel:checkin_submit' %}" hx-target="#result" hx-on::after-request="this.reset(); this.code.focus(); htmx.ajax('GET','{% url 'panel:checkin_recent' %}','#recent')">
+      {% csrf_token %}<input class="input scan-input" name="code" id="code" placeholder="QR o DNI" autocomplete="off" autofocus>
+      <p class="muted" style="text-align:center;margin:10px 0 0">Enter para registrar · También podés buscar por nombre</p>
+    </form>
+    <div id="reader" class="card" style="display:none"></div>
+    <div id="result"><div class="card empty" style="padding:60px 20px"><svg style="width:54px;height:54px;color:var(--brand)"><use href="#i-scan"/></svg><h2 style="margin-top:10px">Esperando socio…</h2></div></div>
+  </div>
+  <div class="card"><div class="card-head"><h3>Ingresos de hoy</h3></div><div id="recent">{% include "panel/frontdesk/_recent.html" %}</div></div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+document.addEventListener("DOMContentLoaded", () => {
+  let scanner = null, last = "", lastAt = 0;
+  document.getElementById("camBtn").addEventListener("click", () => {
+    const box = document.getElementById("reader");
+    if (scanner) { scanner.clear(); scanner = null; box.style.display = "none"; return; }
+    box.style.display = "block";
+    scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 240 }, false);
+    scanner.render((text) => {
+      const now = Date.now();
+      if (text === last && now - lastAt < 5000) return;
+      last = text; lastAt = now;
+      const input = document.getElementById("code"); input.value = text;
+      htmx.trigger(input.form, "submit");
+    });
+  });
+});
+</script>{% endblock %}

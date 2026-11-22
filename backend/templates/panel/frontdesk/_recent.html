@@ -1,0 +1,2 @@
+{% for c in recent %}<div class="list-item"><a href="{% url 'panel:member_detail' c.member_id %}" class="person"><span class="avatar">{{ c.member.initials }}</span><span><b>{{ c.member.full_name }}</b><small>{{ c.created_at|time:"H:i" }} · {{ c.get_method_display }}</small></span></a><span class="badge {% if c.allowed %}ok{% else %}bad{% endif %}">{% if c.allowed %}OK{% else %}{{ c.reason|truncatechars:28 }}{% endif %}</span></div>
+{% empty %}<div class="empty">Todavía no ingresó nadie hoy.</div>{% endfor %}

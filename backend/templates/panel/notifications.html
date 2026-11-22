@@ -1,0 +1,6 @@
+{% extends "panel/base.html" %}{% load humanize %}
+{% block title %}Notificaciones{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Notificaciones</h1></div>
+<div class="card">{% for n in items %}<div class="list-item"><span><b>{{ n.title }}</b><br><small>{{ n.body }}</small></span><small>{{ n.created_at|naturaltime }}</small></div>{% empty %}<div class="empty">Sin notificaciones.</div>{% endfor %}</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+# /etc/cron.d/entrenar  (horario de Argentina: el servidor tiene que estar en America/Argentina/Buenos_Aires)
+SHELL=/bin/bash
+PY=/srv/entrenar/backend/.venv/bin/python
+APP=/srv/entrenar/backend
+LOG=/var/log/entrenar
+
+# Vencimientos, renovaciones, recargos, CRM y estado de cada gimnasio al Hub
+0 6 * * *   entrenar cd $APP && $PY manage.py gym_daily >> $LOG/cron.log 2>&1
+# Métricas (incluye tokens e importe de IA) y cola hacia CoreX Hub
+15 * * * *  entrenar cd $APP && $PY manage.py hub_sync --metricas --dias 2 >> $LOG/hub.log 2>&1
+# Reintentos de la cola (por si el Hub estuvo caído)
+*/10 * * * * entrenar cd $APP && $PY manage.py hub_sync >> $LOG/hub.log 2>&1
+# Día 1: cierra el consumo de IA del mes anterior (precio congelado) y lo reenvía al Hub para facturar
+30 3 1 * *  entrenar cd $APP && $PY manage.py close_ai_billing >> $LOG/billing.log 2>&1
+# Backup diario de la base (todos los schemas) + media
+45 2 * * *  entrenar /srv/entrenar/deploy/backup.sh >> $LOG/backup.log 2>&1

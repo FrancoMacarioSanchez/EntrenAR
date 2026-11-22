@@ -1,0 +1,45 @@
+{% extends "panel/base.html" %}
+{% block title %}QR de ingreso{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+.poster{width:100%;max-width:560px;margin:0 auto;aspect-ratio:1/1.5;border-radius:28px;overflow:hidden;background:#0b0d11;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:42px 36px;position:relative;box-shadow:var(--shadow)}
+.poster:before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;background:var(--brand);filter:blur(90px);opacity:.45;top:-240px;left:50%;transform:translateX(-50%)}
+.poster>*{position:relative}
+.poster h1{font-size:46px;line-height:1;text-align:center;letter-spacing:-.04em;color:#fff}
+.poster .qrbox{background:#fff;border-radius:28px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.poster .qrbox svg{width:290px;height:290px;display:block}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;text-align:center;font-size:13px;opacity:.9}
+.steps b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--brand);margin:0 auto 6px}
+@media print{body *{visibility:hidden}.poster,.poster *{visibility:visible}.poster{position:fixed;inset:0;max-width:none;border-radius:0;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>{% endblock %}
+{% block content %}
+<div class="page-head no-print"><div><h1>QR de ingreso</h1><p>Imprimí este cartel y pegalo en la entrada. El socio lo escanea con la cámara del celular, se abre la app y queda registrado su ingreso.</p></div>
+  <div class="row"><a class="btn" href="{% url 'panel:qr_screen' %}" target="_blank"><svg><use href="#i-phone"/></svg>Modo pantalla (QR rotativo)</a><button class="btn primary" onclick="print()">Imprimir cartel</button></div></div>
+{% if not cfg.self_checkin_enabled %}<div class="alert warn no-print">El autoingreso está desactivado. Activalo en <a href="{% url 'panel:settings' %}"><b>Configuración</b></a>.</div>{% endif %}
+<div class="grid g-side">
+  <div class="poster">
+    <div style="text-align:center"><small style="opacity:.75;letter-spacing:.2em;text-transform:uppercase">{{ gym_settings.display_name }}</small><h1 style="margin-top:10px">Escaneá<br>para entrar</h1></div>
+    <div class="qrbox" id="qr"></div>
+    <div style="text-align:center;margin-top:-6px"><small style="opacity:.75">¿No te anda la cámara? En la app tocá «Ingresar» y escribí</small>
+      <div style="font-size:40px;font-weight:900;letter-spacing:.18em;font-family:ui-monospace,monospace">{{ code }}</div></div>
+    <div class="steps"><div><b>1</b>Abrí la cámara</div><div><b>2</b>Apuntá al código</div><div><b>3</b>¡Listo, a entrenar!</div></div>
+  </div>
+  <div class="stack no-print">
+    <div class="card"><h3>¿Cómo funciona?</h3>
+      <p class="muted">Cada socio necesita su usuario de la app (se crea desde su ficha). Si el QR se abre sin sesión, la app pide ingresar y después registra la entrada.</p>
+      <div class="list-item"><small>Validaciones</small><span>cuota, deuda, apto, cupo de ingresos</span></div>
+      <div class="list-item"><small>Ubicación obligatoria</small><span>{% if cfg.checkin_require_location and cfg.latitude %}Sí · {{ cfg.checkin_radius_m }} m{% else %}No{% endif %}</span></div>
+      <div class="list-item"><small>Código para escribir</small><b style="letter-spacing:.12em">{{ code }}</b></div>
+      <div class="list-item"><small>Link del QR</small><span style="word-break:break-all"><small>{{ url }}</small></span></div>
+    </div>
+    <div class="card"><h3>Seguridad</h3>
+      <p class="muted">El QR impreso no cambia: si te preocupa que alguien lo fotografíe, activá «exigir ubicación» en Configuración o usá el <b>modo pantalla</b> en una tablet o TV, donde el código cambia cada 30 segundos.</p>
+      {% if perm.settings %}<form method="post">{% csrf_token %}<button class="btn danger" data-confirm="El QR impreso actual dejará de funcionar. ¿Generar uno nuevo?">Generar QR nuevo</button></form>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+const q=qrcode(0,'M');q.addData("{{ url|escapejs }}");q.make();
+document.getElementById('qr').innerHTML=q.createSvgTag({cellSize:8,margin:0,scalable:true});
+</script>{% endblock %}

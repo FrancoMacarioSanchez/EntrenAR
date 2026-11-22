@@ -1,0 +1,16 @@
+# Solo la base de datos. La app Django corre local (python manage.py runserver).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: entrenar_db
+    environment:
+      POSTGRES_DB: entrenar
+      POSTGRES_USER: entrenar
+      POSTGRES_PASSWORD: entrenar
+    ports:
+      - "5434:5432"
+    volumes:
+      - entrenar_pg:/var/lib/postgresql/data
+    restart: unless-stopped
+volumes:
+  entrenar_pg:

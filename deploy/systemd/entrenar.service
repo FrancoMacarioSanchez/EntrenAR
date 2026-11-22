@@ -1,0 +1,22 @@
+# /etc/systemd/system/entrenar.service
+[Unit]
+Description=EntrenAR (CoreX) - gunicorn
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service
+
+[Service]
+User=entrenar
+Group=www-data
+WorkingDirectory=/srv/entrenar/backend
+EnvironmentFile=/srv/entrenar/backend/.env
+ExecStart=/srv/entrenar/backend/.venv/bin/gunicorn config.wsgi:application -c /srv/entrenar/deploy/gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=40
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

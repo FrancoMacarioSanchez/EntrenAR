@@ -1,0 +1,21 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ gc.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="{% url 'panel:classes' %}?week={{ date|date:'Y-m-d' }}"><small>← Clases</small></a><h1>{{ gc.name }} · {{ date|date:"l d/m" }} {{ gc.start_time|time:"H:i" }}</h1>
+  <p>{{ active }}/{{ gc.capacity }} lugares · {{ gc.trainer|default:"" }} · {{ gc.room }}</p></div>
+  <form method="post" action="{% url 'panel:class_mark_all' gc.pk date|date:'Y-m-d' %}">{% csrf_token %}<button class="btn">Marcar todos presentes</button></form></div>
+{% if cancellation %}<div class="alert bad">Esta clase está <b>suspendida</b>{% if cancellation.reason %}: {{ cancellation.reason }}{% endif %}.
+  <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="restore"><button class="btn sm">Volver a habilitarla</button></form></div>{% endif %}
+<div class="grid g-side">
+  <div class="card"><div class="table-wrap"><table class="t"><thead><tr><th>Socio</th><th>Estado</th><th></th></tr></thead><tbody>
+  {% for b in bookings %}<tr><td><b>{{ b.member.full_name }}</b></td><td><span class="badge {% if b.status == 'attended' %}ok{% elif b.status == 'no_show' or b.status == 'cancelled' %}bad{% elif b.status == 'waitlist' %}warn{% endif %}">{{ b.get_status_display }}</span></td>
+    <td class="actions"><form method="post" class="row" style="justify-content:flex-end">{% csrf_token %}<input type="hidden" name="booking" value="{{ b.pk }}">
+      <button class="btn sm" name="action" value="attended">Presente</button><button class="btn sm" name="action" value="no_show">Ausente</button><button class="btn sm danger" name="action" value="cancel">Quitar</button></form></td></tr>
+  {% empty %}<tr><td colspan="3"><div class="empty">Sin reservas.</div></td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="stack"><form method="post" class="card stack">{% csrf_token %}<h3>Anotar socio</h3><input type="hidden" name="action" value="add">
+    <select name="member" class="input select" data-filter>{% for m in members %}<option value="{{ m.pk }}">{{ m.full_name }} · {{ m.dni|default:"" }}</option>{% endfor %}</select>
+    <button class="btn primary">Anotar</button></form>
+  {% if not cancellation %}<form method="post" class="card stack">{% csrf_token %}<h3>Suspender esta fecha</h3><input type="hidden" name="action" value="suspend">
+    <input class="input" name="reason" placeholder="Motivo (feriado, profe enfermo…)"><button class="btn danger" data-confirm="¿Suspender la clase de este día? Se avisa a los anotados.">Suspender clase</button></form>{% endif %}</div>
+</div>
+{% endblock %}

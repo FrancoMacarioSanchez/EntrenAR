@@ -1,0 +1,15 @@
+{% load static panel_tags %}<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recibo #{{ p.pk }}</title>
+<link rel="stylesheet" href="{% static 'panel/panel.css' %}"></head><body>
+<div class="receipt">
+  <div style="text-align:center">{% if gym_settings.logo %}<img src="{{ gym_settings.logo.url }}" style="width:60px;height:60px;border-radius:14px;object-fit:cover">{% endif %}
+    <h2>{{ gym_settings.display_name }}</h2><small>{{ gym_settings.address }} {{ gym_settings.phone }}</small></div>
+  <hr><div class="row between"><b>Recibo N° {{ p.pk|stringformat:"06d" }}</b><span>{{ p.paid_at|date:"d/m/Y H:i" }}</span></div>
+  <p style="margin:8px 0">Recibimos de <b>{{ p.member.full_name }}</b>{% if p.member.dni %} (DNI {{ p.member.dni }}){% endif %}:</p>
+  {% for i in items %}<div class="row between" style="margin:6px 0"><span>{{ i.charge.concept|default:i.notes|default:"Pago a cuenta" }}</span><b>{{ i.amount|money }}</b></div>{% endfor %}
+  <hr><div class="row between" style="font-size:18px"><b>TOTAL</b><b>{{ total|money }}</b></div>
+  <p><small>Medio de pago: {{ p.method.name }}{% if p.reference %} · Ref. {{ p.reference }}{% endif %}{% if p.received_by %} · Atendió: {{ p.received_by }}{% endif %}</small></p>
+  {% if p.invoice_number %}<p><small>Factura {{ p.invoice_number }} · CAE {{ p.invoice_cae }}</small></p>{% else %}<p><small>Documento no válido como factura.</small></p>{% endif %}
+  <hr><p style="text-align:center"><small>¡Gracias por entrenar con nosotros! 💪</small></p>
+</div>
+<p class="no-print" style="text-align:center"><button class="btn primary" onclick="print()">Imprimir</button> <a class="btn" href="{% url 'panel:member_detail' p.member_id %}?tab=cobros">Volver al socio</a> <a class="btn" href="{% url 'panel:checkin' %}">Recepción</a></p>
+</body></html>

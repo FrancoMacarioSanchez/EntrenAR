@@ -1,0 +1,10 @@
+{% extends "panel/base.html" %}
+{% block title %}Sin permiso{% endblock %}
+{% block content %}
+<div class="card empty" style="max-width:560px;margin:40px auto">
+  <svg style="width:48px;height:48px;color:var(--brand)"><use href="#i-cog"/></svg>
+  <h2 style="margin-top:10px">No tenés permiso para ver esta sección</h2>
+  <p>Si la necesitás para tu trabajo, pedile al dueño del gimnasio que te la habilite en «Staff y permisos».</p>
+  <a class="btn primary" href="{% url 'panel:home' %}">Volver al inicio</a>
+</div>
+{% endblock %}

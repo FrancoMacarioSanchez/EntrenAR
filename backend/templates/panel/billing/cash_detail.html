@@ -1,0 +1,14 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Cierre de caja{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="{% url 'panel:cash' %}"><small>← Caja</small></a><h1>Cierre de caja</h1><p>{{ s.opened_at|date:"d/m/Y H:i" }} → {{ s.closed_at|date:"d/m/Y H:i"|default:"abierta" }}</p></div><button class="btn no-print" onclick="print()">Imprimir</button></div>
+<div class="grid g4">
+  <div class="card kpi"><div class="label">Ingresos</div><div class="value">{{ t.income|money }}</div></div>
+  <div class="card kpi"><div class="label">Gastos</div><div class="value">{{ t.expenses|money }}</div></div>
+  <div class="card kpi"><div class="label">Efectivo esperado</div><div class="value">{{ t.expected_cash|money }}</div></div>
+  <div class="card kpi"><div class="label">Diferencia</div><div class="value" style="color:{% if t.difference < 0 %}var(--bad){% else %}var(--ok){% endif %}">{{ t.difference|money }}</div><small>Contado {{ s.closing_amount|money }}</small></div>
+</div>
+<div class="card" style="margin-top:16px"><h3 style="margin-bottom:10px">Por medio de pago</h3>{% for m in t.by_method %}<div class="list-item"><span>{{ m.method__name }}</span><b class="mono">{{ m.total|money }}</b></div>{% endfor %}</div>
+<div class="card"><h3 style="margin-bottom:10px">Movimientos</h3>{% for p in movements %}<div class="list-item"><span>{{ p.paid_at|date:"H:i" }} · {{ p.member.full_name }} · {{ p.method.name }}</span><b class="mono">{{ p.amount|money }}</b></div>{% endfor %}
+{% for e in expenses %}<div class="list-item"><span>Gasto: {{ e.description }}</span><b class="mono">-{{ e.amount|money }}</b></div>{% endfor %}</div>
+{% endblock %}

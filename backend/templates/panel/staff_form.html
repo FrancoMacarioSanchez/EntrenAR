@@ -1,0 +1,73 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}{% if obj %}Editar usuario{% else %}Nuevo usuario{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="{{ list_url }}"><small>← Staff y permisos</small></a>
+  <h1>{% if obj %}{{ obj }}{% else %}Nuevo usuario del staff{% endif %}</h1></div></div>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  {% if form.non_field_errors %}<div class="alert bad">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+  <div class="card"><h3 style="margin-bottom:14px">Datos</h3><div class="form-grid">
+    {% include "panel/_field.html" with field=form.username %}{% include "panel/_field.html" with field=form.password %}
+    {% include "panel/_field.html" with field=form.first_name %}{% include "panel/_field.html" with field=form.last_name %}
+    {% include "panel/_field.html" with field=form.email %}{% include "panel/_field.html" with field=form.phone %}
+    {% include "panel/_field.html" with field=form.role %}{% include "panel/_field.html" with field=form.is_active %}
+    {% include "panel/_field.html" with field=form.specialties %}{% include "panel/_field.html" with field=form.avatar %}
+    {% include "panel/_field.html" with field=form.bio %}
+  </div></div>
+
+  <div class="card" id="perm-card">
+    <div class="card-head"><div><h3>¿Qué puede ver y hacer?</h3>
+      <p class="muted" id="owner-note" style="margin:4px 0 0">El dueño tiene acceso a todo.</p></div></div>
+    <div id="perm-body">
+      {% include "panel/_field.html" with field=form.custom_permissions %}
+      <p class="muted" id="preset-note">Usa los permisos estándar del rol. Activá «Personalizar» para elegir uno por uno.</p>
+      <div class="row" style="margin:6px 0 14px" id="perm-tools">
+        <button type="button" class="btn sm" data-preset="reception">Plantilla Recepción</button>
+        <button type="button" class="btn sm" data-preset="admin">Plantilla Gerente</button>
+        <button type="button" class="btn sm" data-preset="trainer">Plantilla Entrenador</button>
+        <button type="button" class="btn sm ghost" data-preset="none">Quitar todos</button>
+      </div>
+      <div class="grid g3 perm-grid">
+        {% for title, items in form.perm_groups %}
+        <div class="perm-group"><h4>{{ title }}</h4>
+          {% for code, label, on in items %}
+          <label class="perm-item"><input type="checkbox" class="check" name="perms" value="{{ code }}" {% if on %}checked{% endif %}><span>{{ label }}</span></label>
+          {% endfor %}
+        </div>{% endfor %}
+      </div>
+      {% for e in form.perms.errors %}<span class="error">{{ e }}</span>{% endfor %}
+    </div>
+  </div>
+  <div class="row" style="margin-top:18px"><button class="btn primary lg">Guardar</button><a class="btn ghost" href="{{ list_url }}">Cancelar</a></div>
+</form>
+<style>
+.perm-group h4{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);margin:0 0 8px}
+.perm-item{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;border-radius:9px;cursor:pointer}
+.perm-item:hover{background:var(--surface-2)}.perm-item span{font-size:14px}
+.perm-grid.locked{opacity:.55;pointer-events:none}
+</style>
+{% endblock %}
+{% block scripts %}
+{{ presets|json_script:"presets" }}
+<script>
+(function(){
+  const presets = JSON.parse(document.getElementById("presets").textContent);
+  const role = document.getElementById("id_role"), custom = document.getElementById("id_custom_permissions");
+  const grid = document.querySelector(".perm-grid"), boxes = [...document.querySelectorAll("input[name=perms]")];
+  const apply = (codes) => boxes.forEach(b => b.checked = codes.includes(b.value));
+  function sync(){
+    const owner = role.value === "owner";
+    document.getElementById("owner-note").style.display = owner ? "" : "none";
+    document.getElementById("perm-body").style.display = owner ? "none" : "";
+    const locked = !custom.checked;
+    grid.classList.toggle("locked", locked);
+    document.getElementById("perm-tools").style.display = locked ? "none" : "";
+    document.getElementById("preset-note").style.display = locked ? "" : "none";
+    if (locked) apply(presets[role.value] || []);
+  }
+  role.addEventListener("change", sync); custom.addEventListener("change", sync);
+  document.querySelectorAll("[data-preset]").forEach(b => b.addEventListener("click", () => apply(presets[b.dataset.preset] || [])));
+  sync();
+})();
+</script>
+{% endblock %}

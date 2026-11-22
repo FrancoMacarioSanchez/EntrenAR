@@ -1,0 +1,24 @@
+<div class="table-wrap">
+<table class="t">
+  <thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}<th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>{% for c in r.cells %}<td>{% if forloop.first and r.detail %}<a href="{{ r.detail }}"><b>{{ c }}</b></a>{% else %}{{ c }}{% endif %}</td>{% endfor %}
+      <td class="actions">
+        {% if r.detail %}<a class="btn sm" href="{{ r.detail }}">Ver</a>{% endif %}
+        {% if r.edit %}<a class="btn sm" href="{{ r.edit }}">Editar</a>{% endif %}
+        {% if r.delete %}<a class="btn sm danger" href="{{ r.delete }}">Eliminar</a>{% endif %}
+      </td></tr>
+  {% empty %}
+    <tr><td colspan="{{ headers|length|add:1 }}"><div class="empty">No hay registros{% if q %} para «{{ q }}»{% endif %}.</div></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if page.paginator.num_pages > 1 %}
+<div class="pagination">
+  <small>{{ page.paginator.count }} registros · página {{ page.number }} de {{ page.paginator.num_pages }}</small>
+  {% if page.has_previous %}<a class="btn sm" href="?{{ querystring }}&page={{ page.previous_page_number }}">‹ Anterior</a>{% endif %}
+  {% if page.has_next %}<a class="btn sm" href="?{{ querystring }}&page={{ page.next_page_number }}">Siguiente ›</a>{% endif %}
+</div>
+{% endif %}

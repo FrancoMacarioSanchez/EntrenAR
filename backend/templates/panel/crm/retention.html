@@ -1,0 +1,11 @@
+{% extends "panel/base.html" %}{% load humanize %}
+{% block title %}Retención{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Retención</h1><p>Socios que necesitan un mensaje hoy. Los links abren WhatsApp con el texto listo.</p></div>
+  <form class="row"><label><small>Plantilla</small></label><select name="tpl" class="input select" onchange="this.form.submit()" style="width:auto">{% for t in templates %}<option value="{{ t.pk }}" {% if t == tpl %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select>
+  <a class="btn" href="{% url 'panel:plantillas_create' %}">+ Plantilla</a></form></div>
+{% for b in blocks %}<div class="card" id="{{ b.key }}"><div class="card-head"><h3>{{ b.title }} <span class="badge">{{ b.rows|length }}</span></h3></div>
+  {% for r in b.rows %}<div class="list-item"><a class="person" href="{% url 'panel:member_detail' r.m.pk %}"><span class="avatar">{{ r.m.initials }}</span><span><b>{{ r.m.full_name }}</b><small>Última visita: {{ r.last|naturaltime|default:"nunca" }}{% if r.m.trainer %} · {{ r.m.trainer }}{% endif %}</small></span></a>
+    <span class="row">{% if r.wa %}<a class="btn sm" target="_blank" href="{{ r.wa }}"><svg><use href="#i-wa"/></svg>Enviar</a>{% else %}<small>sin teléfono</small>{% endif %}<a class="btn sm" href="{% url 'panel:sell' %}?member={{ r.m.pk }}">Renovar</a></span></div>
+  {% empty %}<div class="empty">Nadie en este grupo 🎉</div>{% endfor %}</div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,19 @@
+{% load static %}<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}EntrenAR · Software para gimnasios{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'panel/panel.css' %}"><script src="{% static 'panel/panel.js' %}"></script>
+<style>
+.pub-nav{display:flex;justify-content:space-between;align-items:center;padding:20px 6vw}
+.hero{padding:70px 6vw 90px;display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(36px,5vw,64px);line-height:1.02;letter-spacing:-.04em}
+.hero h1 em{font-style:normal;color:var(--brand)}
+.phone{width:280px;height:560px;border-radius:44px;background:#0b0d11;padding:14px;margin:auto;box-shadow:0 40px 80px rgba(0,0,0,.25);animation:float 7s ease-in-out infinite}
+.phone .scr{width:100%;height:100%;border-radius:32px;background:linear-gradient(160deg,var(--brand),#7c2d12);color:#fff;padding:26px 20px;display:flex;flex-direction:column;gap:12px}
+.phone .tile{background:rgba(255,255,255,.14);border-radius:16px;padding:14px}
+.feat{padding:40px 6vw}
+@media(max-width:860px){.hero{grid-template-columns:1fr}.phone{display:none}}
+</style></head><body>
+<nav class="pub-nav"><b style="font-size:20px">Entren<span style="color:var(--brand)">AR</span></b><div class="row"><a class="btn ghost" href="#planes">Planes</a><a class="btn primary" href="{% url 'signup' %}">Probar gratis</a></div></nav>
+{% block content %}{% endblock %}
+<footer style="padding:40px 6vw;color:var(--ink-3)">EntrenAR es un producto de CoreX · Software SaaS hecho en Argentina</footer>
+</body></html>

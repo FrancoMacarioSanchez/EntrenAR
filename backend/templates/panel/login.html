@@ -1,0 +1,27 @@
+{% load static %}<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ingresar · {{ gym_settings.display_name }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'panel/panel.css' %}"><script src="{% static 'panel/panel.js' %}"></script>
+<style>:root{--brand: {{ gym_settings.primary_color|default:"#ff5a1f" }};}</style></head>
+<body>
+<div class="auth">
+  <div class="auth-art">
+    <div class="row">{% if gym_settings.logo %}<img src="{{ gym_settings.logo.url }}" style="width:46px;height:46px;border-radius:14px;object-fit:cover">{% endif %}<b style="font-size:18px">{{ gym_settings.display_name }}</b></div>
+    <div><h1>Gestioná tu gimnasio y potenciá a cada alumno.</h1>
+      <p style="opacity:.8;max-width:440px;font-size:17px">Socios, membresías, cobros, CRM, rutinas y progreso, todo en un solo lugar.</p></div>
+    <small style="opacity:.6">EntrenAR · un producto de CoreX</small>
+    <div class="blob"></div>
+  </div>
+  <div class="auth-form">
+    <form method="post" class="card stack">{% csrf_token %}
+      <h2>Ingresar</h2>
+      <p class="muted" style="margin-top:4px">Staff del gimnasio. Alumnos y entrenadores: <a href="/app/" style="color:var(--brand);font-weight:700">abrir la app</a>.</p>
+      {% if activated %}<div class="alert">¡Listo! Tu contraseña quedó guardada. Ingresá con tu usuario.</div>{% endif %}
+      {% if form.non_field_errors %}<div class="alert bad">Usuario o contraseña incorrectos.</div>{% endif %}
+      {% for field in form %}{% include "panel/_field.html" %}{% endfor %}
+      <button class="btn primary lg" style="width:100%">Ingresar</button>
+    </form>
+  </div>
+</div>
+</body></html>

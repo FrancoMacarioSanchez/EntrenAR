@@ -1,0 +1,98 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Vender membresía{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Vender membresía</h1><p>Elegí el socio y el plan. Se generan los cargos y, si cobrás ahora, el recibo.</p></div>
+  <a class="btn" href="{% url 'panel:member_create' %}"><svg><use href="#i-plus"/></svg>Socio nuevo</a></div>
+<form method="post" class="grid g-side">{% csrf_token %}
+  <div class="stack">
+    <div class="card">
+      <h3 style="margin-bottom:12px">1. Socio</h3>
+      {% if member %}<div class="person"><span class="avatar">{{ member.initials }}</span><span><b>{{ member.full_name }}</b><small>DNI {{ member.dni|default:"—" }}</small></span></div>
+        <input type="hidden" name="member" value="{{ member.pk }}">
+      {% else %}<div class="field"><select name="member" class="input select" data-filter required>{% for o in form.member.field.queryset %}<option value="{{ o.pk }}">{{ o.full_name }} · {{ o.dni|default:"" }}</option>{% endfor %}</select>{% for e in form.member.errors %}<span class="error">{{ e }}</span>{% endfor %}</div>{% endif %}
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px">2. Plan</h3>
+      <div class="grid g2" id="plans">
+        {% for p in plans %}<label class="card" style="cursor:pointer;border-left:4px solid {{ p.color }};padding:16px">
+          <input type="radio" name="plan" value="{{ p.pk }}" data-price="{{ p.price|stringformat:'s' }}" {% if form.plan.value|stringformat:'s' == p.pk|stringformat:'s' %}checked{% endif %} required style="accent-color:var(--brand)">
+          <b>{{ p.name }}</b><br><span class="mono" style="font-size:20px;font-weight:800">{{ p.price|money }}</span><br>
+          <small>{{ p.get_period_display }}{% if p.duration_count > 1 %} ×{{ p.duration_count }}{% endif %} · {{ p.get_access_type_display }}{% if p.visits_limit %} ({{ p.visits_limit }}){% endif %}</small></label>
+        {% endfor %}
+      </div>
+      {% for e in form.plan.errors %}<span class="error">{{ e }}</span>{% endfor %}
+      {% if form.promotion %}
+      <h3 style="margin:20px 0 10px">Promoción</h3>
+      <select name="promotion" id="id_promotion" class="input select">
+        <option value="">Sin promoción</option>
+        {% for pr in promos %}<option value="{{ pr.id }}" {% if form.promotion.value|stringformat:'s' == pr.id|stringformat:'s' %}selected{% endif %}>{{ pr.name }} · {{ pr.summary }}{% if pr.code %} · código {{ pr.code }}{% endif %}</option>{% endfor %}
+      </select>
+      <small class="muted" id="promo-note"></small>
+      {% for e in form.promotion.errors %}<span class="error" style="display:block">{{ e }}</span>{% endfor %}
+      {% endif %}
+      <div class="form-grid" style="margin-top:16px">
+        {% include "panel/_field.html" with field=form.start_date %}
+        {% if form.discount_percent %}{% include "panel/_field.html" with field=form.discount_percent %}{% endif %}
+        {% include "panel/_field.html" with field=form.auto_renew %}{% include "panel/_field.html" with field=form.charge_enrollment %}
+        {% include "panel/_field.html" with field=form.notes %}
+      </div>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="card" style="position:sticky;top:80px">
+      <h3 style="margin-bottom:12px">3. Cobro</h3>
+      <div class="list-item"><span>Plan</span><b id="sub" class="mono">—</b></div>
+      <div class="list-item"><span>Descuento</span><b id="disc" class="mono">—</b></div>
+      <div class="list-item" id="promo-row" style="display:none"><span>Promoción</span><b id="promo" class="mono" style="color:var(--ok)">—</b></div>
+      <div class="list-item"><span>Matrícula</span><b id="enr" class="mono">{{ gym_settings.enrollment_fee|money }}</b></div>
+      <div class="list-item"><span style="font-size:18px"><b>Total</b></span><b id="tot" class="mono" style="font-size:24px;color:var(--brand)">—</b></div>
+      <div class="stack" style="margin-top:12px">
+        {% include "panel/_field.html" with field=form.pay_now %}
+        {% include "panel/_field.html" with field=form.pay_method %}
+        {% include "panel/_field.html" with field=form.pay_amount %}
+      </div>
+      <button class="btn primary lg" style="width:100%;margin-top:16px">Confirmar venta</button>
+    </div>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+{{ promos|json_script:"promos-data" }}
+<script>
+(function(){
+  const fee = {{ gym_settings.enrollment_fee|stringformat:'s' }};
+  const promos = JSON.parse(document.getElementById("promos-data").textContent);
+  const fmt = n => "$ " + n.toLocaleString("es-AR", {maximumFractionDigits: 2});
+  const $ = id => document.getElementById(id);
+  function calc(){
+    const p = document.querySelector("input[name=plan]:checked");
+    const planId = p ? parseInt(p.value) : null;
+    const price = p ? parseFloat(p.dataset.price) : 0;
+    let pct = $("id_discount_percent") ? parseFloat($("id_discount_percent").value || 0) : 0;
+    let amount = 0, freeEnr = false, promoTxt = "";
+    const sel = $("id_promotion");
+    const promo = sel && sel.value ? promos.find(x => String(x.id) === sel.value) : null;
+    if (promo) {
+      if (promo.plans.length && planId && !promo.plans.includes(planId)) promoTxt = "⚠ No aplica a este plan";
+      else if (promo.kind === "percent") { pct = Math.min(100, pct + promo.value); promoTxt = promo.summary; }
+      else if (promo.kind === "amount") { amount = promo.value; promoTxt = "-" + fmt(promo.value); }
+      else if (promo.kind === "extra_days") promoTxt = "+" + promo.value + " días de regalo";
+      else if (promo.kind === "free_enrollment") { freeEnr = true; promoTxt = "Matrícula gratis"; }
+      $("promo-note").textContent = promo.only_new ? "Solo para socios nuevos." : "";
+    }
+    $("promo-row").style.display = promo ? "" : "none";
+    $("promo").textContent = promoTxt;
+    const enrChk = $("id_charge_enrollment");
+    const enr = enrChk && enrChk.checked && !freeEnr ? fee : 0;
+    const disc = price * pct / 100;
+    $("sub").textContent = p ? fmt(price) : "—";
+    $("disc").textContent = pct ? "-" + fmt(disc) + " (" + pct + "%)" : "—";
+    $("enr").textContent = enr ? fmt(enr) : "—";
+    $("tot").textContent = fmt(Math.max(price - disc - amount, 0) + enr);
+  }
+  document.querySelector("form").addEventListener("input", calc);
+  document.querySelector("form").addEventListener("change", calc);
+  calc();
+})();
+</script>
+{% endblock %}

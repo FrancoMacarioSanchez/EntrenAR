@@ -1,0 +1,25 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Caja{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Caja</h1><p>{% if session %}Abierta por {{ session.opened_by }} el {{ session.opened_at|date:"d/m H:i" }}{% else %}La caja está cerrada{% endif %}</p></div></div>
+{% if session %}
+{% if perm.cash_totals %}<div class="grid g4">
+  <div class="card kpi"><div class="label">Ingresos</div><div class="value">{{ t.income|money }}</div></div>
+  <div class="card kpi"><div class="label">Gastos</div><div class="value">{{ t.expenses|money }}</div></div>
+  <div class="card kpi"><div class="label">Efectivo esperado</div><div class="value">{{ t.expected_cash|money }}</div><small>Inicial {{ session.opening_amount|money }}</small></div>
+  <div class="card kpi"><div class="label">Por medio de pago</div>{% for m in t.by_method %}<div class="row between"><small>{{ m.method__name }}</small><b class="mono">{{ m.total|money }}</b></div>{% endfor %}</div>
+</div>{% else %}<div class="alert">Cierre a ciegas: contá el efectivo de la caja y cargalo al cerrar. El dueño ve la diferencia.</div>{% endif %}
+<div class="grid g-side" style="margin-top:16px">
+  <div class="card"><h3 style="margin-bottom:10px">Movimientos</h3>
+    {% for p in movements %}<div class="list-item" {% if p.is_void %}style="opacity:.4;text-decoration:line-through"{% endif %}><span><b>{{ p.member.full_name }}</b><br><small>{{ p.paid_at|date:"H:i" }} · {{ p.method.name }}</small></span><b class="mono">{{ p.amount|money }}</b></div>{% empty %}<div class="empty">{% if perm.cash_totals %}Sin movimientos.{% else %}Los totales y movimientos de la caja los ve el dueño.{% endif %}</div>{% endfor %}
+    {% for e in expenses %}<div class="list-item"><span><b>Gasto: {{ e.description }}</b><br><small>{{ e.method.name }}</small></span><b class="mono" style="color:var(--bad)">-{{ e.amount|money }}</b></div>{% endfor %}</div>
+  <form method="post" class="card stack">{% csrf_token %}<h3>Cerrar caja</h3>{% for field in close_form %}{% include "panel/_field.html" %}{% endfor %}<button class="btn primary" data-confirm="¿Cerrar la caja?">Cerrar caja</button><a class="btn" href="{% url 'panel:gastos_create' %}?next=/caja/">+ Registrar gasto</a></form>
+</div>
+{% else %}
+<form method="post" class="card stack" style="max-width:420px">{% csrf_token %}<h3>Abrir caja</h3>{% for field in open_form %}{% include "panel/_field.html" %}{% endfor %}<button class="btn primary">Abrir caja</button></form>
+{% endif %}
+{% if perm.cash_totals %}<div class="card"><h3 style="margin-bottom:10px">Cierres anteriores</h3>
+  <div class="table-wrap"><table class="t"><thead><tr><th>Apertura</th><th>Cierre</th><th>Responsable</th><th>Esperado</th><th>Contado</th><th></th></tr></thead><tbody>
+  {% for s in history %}<tr><td>{{ s.opened_at|date:"d/m H:i" }}</td><td>{{ s.closed_at|date:"d/m H:i" }}</td><td>{{ s.closed_by }}</td><td class="mono">{{ s.totals.expected_cash|money }}</td><td class="mono">{{ s.closing_amount|money }}</td><td class="actions"><a class="btn sm" href="{% url 'panel:cash_detail' s.pk %}">Ver</a></td></tr>
+  {% empty %}<tr><td colspan="6"><div class="empty">Sin cierres.</div></td></tr>{% endfor %}</tbody></table></div></div>{% endif %}
+{% endblock %}

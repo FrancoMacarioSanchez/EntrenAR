@@ -1,0 +1,28 @@
+{% extends "panel/base.html" %}
+{% block title %}{% if member %}Editar socio{% else %}Nuevo socio{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="{% if member %}{% url 'panel:member_detail' member.pk %}{% else %}{% url 'panel:members' %}{% endif %}"><small>← Volver</small></a>
+  <h1>{% if member %}{{ member.full_name }}{% else %}Nuevo socio{% endif %}</h1></div></div>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert bad">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+  <div class="card"><h3 style="margin-bottom:14px">Datos personales</h3><div class="form-grid">
+    {% include "panel/_field.html" with field=form.first_name %}{% include "panel/_field.html" with field=form.last_name %}
+    {% include "panel/_field.html" with field=form.dni %}{% include "panel/_field.html" with field=form.email %}
+    {% include "panel/_field.html" with field=form.phone %}{% include "panel/_field.html" with field=form.birth_date %}
+    {% include "panel/_field.html" with field=form.sex %}{% include "panel/_field.html" with field=form.height_cm %}
+    {% include "panel/_field.html" with field=form.address %}{% include "panel/_field.html" with field=form.photo %}
+  </div></div>
+  <div class="card"><h3 style="margin-bottom:14px">Entrenamiento</h3><div class="form-grid">
+    {% include "panel/_field.html" with field=form.goal %}{% include "panel/_field.html" with field=form.trainer %}
+    {% include "panel/_field.html" with field=form.status %}{% include "panel/_field.html" with field=form.joined_at %}
+    {% include "panel/_field.html" with field=form.source %}
+  </div></div>
+  <div class="card"><h3 style="margin-bottom:14px">Salud y emergencias</h3><div class="form-grid">
+    {% include "panel/_field.html" with field=form.emergency_name %}{% include "panel/_field.html" with field=form.emergency_phone %}
+    {% include "panel/_field.html" with field=form.medical_clearance_until %}{% include "panel/_field.html" with field=form.medical_clearance_file %}
+    {% include "panel/_field.html" with field=form.medical_notes %}{% include "panel/_field.html" with field=form.notes %}
+  </div></div>
+  {% if form.create_app_access %}<div class="card">{% include "panel/_field.html" with field=form.create_app_access %}</div>{% endif %}
+  <div class="row" style="margin-top:18px"><button class="btn primary lg">Guardar socio</button></div>
+</form>
+{% endblock %}

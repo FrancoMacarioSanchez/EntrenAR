@@ -1,0 +1,8 @@
+{% extends "panel/base.html" %}
+{% block title %}Tareas{% endblock %}
+{% block content %}
+{% csrf_token %}
+<div class="page-head"><div><h1>Tareas pendientes</h1><p>Las tareas automáticas (socios que no vienen, vencidos, seguimiento de leads) se generan cada mañana.</p></div>
+  <div class="row"><a class="btn" href="{% url 'panel:tareas_list' %}">Ver todas</a><a class="btn primary" href="{% url 'panel:tareas_create' %}"><svg><use href="#i-plus"/></svg>Nueva tarea</a></div></div>
+<div class="card">{% for t in tasks %}{% include "panel/crm/_task.html" %}{% empty %}<div class="empty">¡Nada pendiente! 🎉</div>{% endfor %}</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "panel/base.html" %}{% load panel_tags %}
+{% block title %}Socios{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Socios</h1><p>{{ total }} socios{% if q %} para «{{ q }}»{% endif %}</p></div>
+  <a class="btn primary" href="{% url 'panel:member_create' %}"><svg><use href="#i-plus"/></svg>Nuevo socio</a>
+</div>
+<div class="card">
+  <form class="row" hx-get="{% url 'panel:members' %}" hx-target="#member-table" hx-trigger="input delay:300ms, change" hx-push-url="true" style="margin-bottom:14px">
+    <div class="search" style="flex:1;min-width:220px"><svg><use href="#i-search"/></svg><input class="input" name="q" value="{{ q }}" placeholder="Nombre, DNI, email o teléfono" autofocus></div>
+    <select class="input select" name="state" style="width:auto">
+      <option value="">Estado de cuota: todos</option>
+      <option value="active" {% if state == 'active' %}selected{% endif %}>Al día</option>
+      <option value="expiring" {% if state == 'expiring' %}selected{% endif %}>Vencen en 7 días</option>
+      <option value="expired" {% if state == 'expired' %}selected{% endif %}>Vencidos</option>
+      <option value="none" {% if state == 'none' %}selected{% endif %}>Sin plan</option>
+      <option value="debt" {% if state == 'debt' %}selected{% endif %}>Con deuda</option>
+    </select>
+    <select class="input select" name="trainer" style="width:auto">
+      <option value="">Entrenador: todos</option>
+      {% for t in trainers %}<option value="{{ t.pk }}" {% if request.GET.trainer == t.pk|stringformat:'s' %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select>
+    <select class="input select" name="order" style="width:auto">
+      <option value="last_name">Orden: apellido</option>
+      <option value="-joined_at" {% if request.GET.order == '-joined_at' %}selected{% endif %}>Más nuevos</option>
+      <option value="last_end" {% if request.GET.order == 'last_end' %}selected{% endif %}>Vencen antes</option>
+    </select>
+  </form>
+  <div id="member-table">{% include "panel/members/_table.html" %}</div>
+</div>
+{% endblock %}

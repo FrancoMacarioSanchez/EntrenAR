@@ -1,0 +1,7 @@
+{% extends "public/base.html" %}
+{% block content %}
+<section style="padding:40px 6vw 80px;display:grid;place-items:center"><div class="card stack" style="max-width:560px;text-align:center">
+  <div style="font-size:54px">🎉</div><h1>¡{{ gym.name }} está listo!</h1>
+  <p>Tu panel: <a href="{{ url }}" style="color:var(--brand);font-weight:800">{{ url }}</a><br>App para alumnos y entrenadores: <b>{{ url }}/app/</b></p>
+  <a class="btn primary lg" href="{{ url }}/login/">Ingresar al panel</a></div></section>
+{% endblock %}

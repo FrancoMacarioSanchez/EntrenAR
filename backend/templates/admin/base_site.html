@@ -1,0 +1,4 @@
+{% extends "admin/base.html" %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | CoreX · EntrenAR{% endblock %}
+{% block branding %}<div id="site-name"><a href="{% url 'admin:index' %}">CoreX · EntrenAR</a></div>{% endblock %}
+{% block nav-global %}{% if user.is_staff %}<a href="{% url 'admin_costs' %}" style="color:var(--header-link-color);font-weight:600;margin-right:16px">📊 Costos y facturación</a>{% endif %}{% endblock %}

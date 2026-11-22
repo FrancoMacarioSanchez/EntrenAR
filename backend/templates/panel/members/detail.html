@@ -1,0 +1,158 @@
+{% extends "panel/base.html" %}{% load panel_tags humanize %}
+{% block title %}{{ m.full_name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="person">
+    {% if m.photo %}<img class="avatar lg" src="{{ m.photo.url }}">{% else %}<span class="avatar lg">{{ m.initials }}</span>{% endif %}
+    <div>
+      <h1>{{ m.full_name }}</h1>
+      <div class="row" style="margin-top:6px">
+        <span class="badge {{ state.1 }}">{{ state.0 }}</span>
+        {% if m.status != 'active' %}<span class="badge muted">{{ m.get_status_display }}</span>{% endif %}
+        {% if not m.medical_ok %}<span class="badge warn">Apto físico {% if m.medical_clearance_until %}vencido{% else %}faltante{% endif %}</span>{% endif %}
+        {% if m.debt %}<span class="badge bad">Debe {{ m.debt|money }}</span>{% endif %}
+        <small>DNI {{ m.dni|default:"—" }}{% if m.age %} · {{ m.age }} años{% endif %} · {{ m.get_goal_display }}{% if m.trainer %} · Prof. {{ m.trainer }}{% endif %}</small>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    {% if wa %}<a class="btn" href="{{ wa }}" target="_blank"><svg><use href="#i-wa"/></svg>WhatsApp</a>{% endif %}
+    <a class="btn" href="{% url 'panel:member_card' m.pk %}" target="_blank">Credencial QR</a>
+    <a class="btn" href="{% url 'panel:member_update' m.pk %}">Editar</a>
+    <a class="btn" href="{% url 'panel:collect' m.pk %}"><svg><use href="#i-cash"/></svg>Cobrar</a>
+    <a class="btn primary" href="{% url 'panel:sell' %}?member={{ m.pk }}"><svg><use href="#i-card"/></svg>Vender / renovar</a>
+  </div>
+</div>
+
+<nav class="tabs">
+  <a href="?tab=resumen" class="{% if tab == 'resumen' %}active{% endif %}">Resumen</a>
+  <a href="?tab=membresias" class="{% if tab == 'membresias' %}active{% endif %}">Membresías</a>
+  <a href="?tab=cobros" class="{% if tab == 'cobros' %}active{% endif %}">Cobros</a>
+  <a href="?tab=ingresos" class="{% if tab == 'ingresos' %}active{% endif %}">Asistencia</a>
+  <a href="?tab=entrenamiento" class="{% if tab == 'entrenamiento' %}active{% endif %}">Entrenamiento</a>
+  <a href="?tab=medidas" class="{% if tab == 'medidas' %}active{% endif %}">Cuerpo</a>
+</nav>
+
+{% if tab == 'resumen' %}
+<div class="grid g4">
+  <div class="card kpi"><div class="label">Membresía</div><div class="value" style="font-size:20px">{{ membership.plan.name|default:"Sin plan" }}</div>
+    {% if membership %}<small>{{ membership.start_date|date:"d/m" }} → {{ membership.end_date|date:"d/m/Y" }}{% if membership.visits_left is not None %} · quedan {{ membership.visits_left }} ingresos{% endif %}</small>{% endif %}</div>
+  <div class="card kpi"><div class="label">Visitas (30 días)</div><div class="value">{{ visits_30 }}</div><small>Última: {{ m.last_checkin|naturaltime|default:"nunca" }}</small></div>
+  <div class="card kpi"><div class="label">Entrenamientos registrados (30 días)</div><div class="value">{{ sessions_30 }}</div><small>{{ routine.name|default:"Sin rutina activa" }}</small></div>
+  <div class="card kpi"><div class="label">Composición</div><div class="value">{% if last_measure.body_fat %}{{ last_measure.body_fat }}%{% else %}—{% endif %}</div><small>{% if last_measure %}{{ last_measure.weight_kg }} kg · {{ last_measure.date|date:"d/m/Y" }}{% else %}Sin mediciones{% endif %}</small></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card">
+    <div class="card-head"><h3>Saldo pendiente</h3>{% if pending %}<a class="btn sm primary" href="{% url 'panel:collect' m.pk %}">Cobrar</a>{% endif %}</div>
+    {% for c in pending %}<div class="list-item"><span><b>{{ c.concept }}</b><br><small>Vence {{ c.due_date|date:"d/m/Y" }}</small></span><b class="mono">{{ c.balance|money }}</b></div>
+    {% empty %}<div class="empty">Está al día 🎉</div>{% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Notas</h3></div>
+    <form method="post" action="{% url 'panel:member_note' m.pk %}" class="stack">{% csrf_token %}
+      {{ note_form.text }}<div class="row between"><label class="row"><input type="checkbox" name="visible_to_member" class="check"> Visible para el alumno</label><button class="btn sm">Agregar nota</button></div></form>
+    {% for n in notes %}<div class="list-item"><span>{{ n.text|linebreaksbr }}<br><small>{{ n.author }} · {{ n.created_at|naturaltime }}{% if n.visible_to_member %} · visible{% endif %}</small></span></div>{% endfor %}
+  </div>
+</div>
+<div class="grid g3" style="margin-top:16px">
+  <div class="card"><h3 style="margin-bottom:10px">Contacto</h3>
+    <div class="list-item"><small>Teléfono</small><span>{{ m.phone|default:"—" }}</span></div>
+    <div class="list-item"><small>Email</small><span>{{ m.email|default:"—" }}</span></div>
+    <div class="list-item"><small>Dirección</small><span>{{ m.address|default:"—" }}</span></div>
+    <div class="list-item"><small>Emergencias</small><span>{{ m.emergency_name|default:"—" }} {{ m.emergency_phone }}</span></div>
+    <div class="list-item"><small>Socio desde</small><span>{{ m.joined_at|date:"d/m/Y" }}</span></div></div>
+  <div class="card"><h3 style="margin-bottom:10px">Salud</h3>
+    <div class="list-item"><small>Apto físico</small><span>{{ m.medical_clearance_until|date:"d/m/Y"|default:"—" }}{% if m.medical_clearance_file %} · <a href="{{ m.medical_clearance_file.url }}" target="_blank" style="color:var(--brand)">ver</a>{% endif %}</span></div>
+    <p style="white-space:pre-line">{{ m.medical_notes|default:"Sin observaciones." }}</p></div>
+  <div class="card"><h3 style="margin-bottom:10px">App del alumno</h3>
+    {% if m.user %}<p>Usuario: <b>{{ m.user.username }}</b><br><small>Último ingreso: {{ m.user.last_login|naturaltime|default:"nunca" }}</small></p>{% else %}<p class="muted">Todavía no tiene acceso a la app.</p>{% endif %}
+    <form method="post" action="{% url 'panel:member_app_access' m.pk %}">{% csrf_token %}<button class="btn sm">{% if m.user %}Resetear contraseña{% else %}Crear acceso{% endif %}</button></form>
+    {% if ai_addon %}<h4 style="margin:16px 0 8px">Análisis de comidas con IA</h4>
+    <form method="post" action="{% url 'panel:member_ai_limit' m.pk %}" class="row">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <select class="input select" name="ai_daily_limit" style="width:auto">
+        <option value="" {% if ai_own_limit is None %}selected{% endif %}>Límite del gimnasio ({{ ai_addon.effective_daily_limit }} por día)</option>
+        {% for n in ai_options %}<option value="{{ n }}" {% if ai_own_limit == n %}selected{% endif %}>{% if n == 0 %}Sin IA{% else %}{{ n }} por día{% endif %}</option>{% endfor %}
+      </select>{% if perm.members_edit %}<button class="btn sm">Guardar</button>{% endif %}</form>
+    <small class="muted">Este mes usó {{ ai_month }} análisis.</small>{% endif %}
+    <h4 style="margin:16px 0 8px">Récords recientes</h4>
+    {% for r in prs %}<div class="list-item"><small>{{ r.exercise.name }}</small><b>{{ r.label }}</b></div>{% empty %}<small>Sin récords todavía.</small>{% endfor %}</div>
+</div>
+{% if perm.members_delete %}<p style="margin-top:20px"><a class="btn sm danger" href="{% url 'panel:member_delete' m.pk %}">Eliminar socio</a></p>{% endif %}
+
+{% elif tab == 'membresias' %}
+<div class="card">
+  <div class="table-wrap"><table class="t"><thead><tr><th>Plan</th><th>Desde</th><th>Hasta</th><th>Precio</th><th>Estado</th><th>Auto-renov.</th><th></th></tr></thead><tbody>
+  {% for ms in memberships %}<tr>
+    <td><span class="dot" style="background:{{ ms.plan.color }}"></span> <b>{{ ms.plan.name }}</b>{% if ms.notes %}<br><small>{{ ms.notes }}</small>{% endif %}
+      {% for f in ms.freezes.all %}<br><small>❄️ Congelada {{ f.start_date|date:"d/m" }}–{{ f.end_date|date:"d/m" }} {{ f.reason }}</small>{% endfor %}</td>
+    <td>{{ ms.start_date|date:"d/m/Y" }}</td><td>{{ ms.end_date|date:"d/m/Y" }}</td>
+    <td class="mono">{{ ms.final_price|money }}{% if ms.discount_percent %} <small>(-{{ ms.discount_percent|floatformat:0 }}%)</small>{% endif %}</td>
+    <td><span class="badge {% if ms.is_current %}ok{% elif ms.status == 'frozen' %}info{% elif ms.status == 'cancelled' %}bad{% endif %}">{% if ms.is_current %}Vigente{% else %}{{ ms.get_status_display }}{% endif %}</span></td>
+    <td><form method="post" action="{% url 'panel:membership_toggle_renew' ms.pk %}">{% csrf_token %}<button class="btn sm ghost">{% if ms.auto_renew %}✅ Sí{% else %}— No{% endif %}</button></form></td>
+    <td class="actions">{% if ms.status != 'cancelled' %}
+      <details style="display:inline-block;position:relative"><summary class="btn sm">Congelar</summary>
+        <form method="post" action="{% url 'panel:membership_freeze' ms.pk %}" class="card stack" style="position:absolute;right:0;z-index:5;width:280px;text-align:left">{% csrf_token %}
+          {% for field in freeze_form %}{% include "panel/_field.html" %}{% endfor %}<button class="btn primary sm">Congelar</button></form></details>
+      {% if not ms.renewed_to_id %}<form method="post" action="{% url 'panel:membership_renew' ms.pk %}" style="display:inline">{% csrf_token %}<button class="btn sm">Renovar</button></form>{% endif %}
+      {% if perm.memberships_cancel %}<form method="post" action="{% url 'panel:membership_cancel' ms.pk %}" style="display:inline">{% csrf_token %}<button class="btn sm danger" data-confirm="¿Cancelar la membresía y anular sus cargos pendientes?">Cancelar</button></form>{% endif %}
+    {% endif %}</td></tr>
+  {% empty %}<tr><td colspan="7"><div class="empty">Sin membresías. <a href="{% url 'panel:sell' %}?member={{ m.pk }}" style="color:var(--brand)">Vender la primera →</a></div></td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+
+{% elif tab == 'cobros' %}
+<div class="grid g2">
+  <div class="card"><div class="card-head"><h3>Cargos</h3><a class="btn sm" href="{% url 'panel:cargos_create' %}?member={{ m.pk }}&next=/socios/{{ m.pk }}/%3Ftab%3Dcobros">+ Cargo</a></div>
+    {% for c in charges %}<div class="list-item"><span><b>{{ c.concept }}</b><br><small>{{ c.get_kind_display }} · vence {{ c.due_date|date:"d/m/Y" }}</small></span>
+      <span style="text-align:right"><b class="mono">{{ c.amount|money }}</b><br><span class="badge {% if c.status == 'paid' %}ok{% elif c.status == 'cancelled' %}muted{% else %}warn{% endif %}">{{ c.get_status_display }}</span>
+      {% if c.status == 'pending' or c.status == 'partial' %}
+        <form method="post" action="{% url 'panel:charge_mp' c.pk %}" style="display:inline">{% csrf_token %}<button class="btn sm" title="Generar link de Mercado Pago y enviarlo por WhatsApp">Link MP</button></form>
+        {% if perm.void_payments %}<form method="post" action="{% url 'panel:charge_cancel' c.pk %}" style="display:inline">{% csrf_token %}<button class="btn sm ghost" data-confirm="¿Anular el cargo?">Anular</button></form>{% endif %}
+      {% endif %}</span></div>
+    {% empty %}<div class="empty">Sin cargos.</div>{% endfor %}</div>
+  <div class="card"><div class="card-head"><h3>Pagos</h3><a class="btn sm primary" href="{% url 'panel:collect' m.pk %}">Registrar pago</a></div>
+    {% for p in payments %}<div class="list-item {% if p.is_void %}void{% endif %}" {% if p.is_void %}style="opacity:.45;text-decoration:line-through"{% endif %}>
+      <span><b class="mono">{{ p.amount|money }}</b> · {{ p.method.name }}<br><small>{{ p.paid_at|date:"d/m/Y H:i" }} · {{ p.charge.concept|default:p.notes }}{% if p.invoice_number %} · Fact. {{ p.invoice_number }}{% endif %}</small></span>
+      <a class="btn sm" href="{% url 'panel:receipt' p.pk %}" target="_blank">Recibo</a></div>
+    {% empty %}<div class="empty">Sin pagos.</div>{% endfor %}</div>
+</div>
+
+{% elif tab == 'ingresos' %}
+<div class="grid g2">
+  <div class="card"><h3 style="margin-bottom:10px">Ingresos al gimnasio</h3>
+    {% for c in checkins %}<div class="list-item"><span>{{ c.created_at|date:"D d/m/Y H:i" }}<br><small>{{ c.get_method_display }}{% if c.by %} · {{ c.by }}{% endif %}</small></span><span class="badge {% if c.allowed %}ok{% else %}bad{% endif %}">{% if c.allowed %}Ingresó{% else %}{{ c.reason }}{% endif %}</span></div>
+    {% empty %}<div class="empty">Sin ingresos registrados.</div>{% endfor %}</div>
+  <div class="card"><h3 style="margin-bottom:10px">Reservas de clases</h3>
+    {% for b in bookings %}<div class="list-item"><span><b>{{ b.gym_class.name }}</b><br><small>{{ b.date|date:"D d/m" }} {{ b.gym_class.start_time|time:"H:i" }}</small></span><span class="badge">{{ b.get_status_display }}</span></div>
+    {% empty %}<div class="empty">Sin reservas.</div>{% endfor %}</div>
+</div>
+
+{% elif tab == 'entrenamiento' %}
+<div class="grid g-side">
+  <div class="stack">
+    {% for r in routines %}<div class="card">
+      <div class="card-head"><div><h3>{{ r.name }} {% if r.is_active %}<span class="badge ok">Activa</span>{% endif %} <small>v{{ r.version }}</small></h3><small>{{ r.goal }} · por {{ r.trainer|default:"—" }} · desde {{ r.start_date|date:"d/m/Y" }}</small></div>
+        <a class="btn sm" href="/app/entrenador/rutinas/{{ r.pk }}" target="_blank">Editar en la app</a></div>
+      <div class="grid g3">{% for d in r.days.all %}<div><b>{{ d.name }}</b>{% for e in d.exercises.all %}<div class="list-item"><small>{{ e.exercise.name }}</small><small class="mono">{{ e.sets }}×{{ e.reps_label }}{% if e.target_weight %} · {{ e.target_weight|floatformat:"-1" }}kg{% endif %}</small></div>{% endfor %}</div>{% endfor %}</div>
+    </div>{% empty %}<div class="card empty">Sin rutinas. El entrenador la arma desde la app.</div>{% endfor %}
+    <div class="card"><h3 style="margin-bottom:10px">Últimos entrenamientos</h3>
+      {% for s in sessions %}<details class="list-item" style="display:block"><summary class="row between" style="cursor:pointer"><span><b>{{ s.date|date:"D d/m" }}</b> · {{ s.routine_day.name|default:"Libre" }}</span><small>{{ s.sets.count }} series · {{ s.volume|floatformat:0 }} kg{% if s.duration_min %} · {{ s.duration_min }} min{% endif %}</small></summary>
+        <div style="padding:8px 0">{% for x in s.sets.all %}<small style="display:block">{{ x.exercise.name }} · S{{ x.set_number }}: {% if x.weight %}{{ x.weight|floatformat:"-1" }} kg × {% endif %}{{ x.reps|default:"" }}{% if x.duration_seconds %}{{ x.duration_seconds }}s{% endif %}{% if x.to_failure %} (fallo){% endif %}</small>{% endfor %}</div></details>
+      {% empty %}<div class="empty">Sin entrenamientos registrados.</div>{% endfor %}</div>
+  </div>
+  <div class="stack">
+    <div class="card"><h3 style="margin-bottom:10px">🏆 Récords</h3>{% for r in records %}<div class="list-item"><span><b>{{ r.exercise.name }}</b><br><small>{{ r.achieved_at|date:"d/m/Y" }}</small></span><small>{{ r.label }}</small></div>{% empty %}<div class="empty">Sin récords.</div>{% endfor %}</div>
+    <div class="card"><h3 style="margin-bottom:10px">Logros</h3><div class="row">{% for a in achievements %}<span class="badge" title="{{ a.description }}">{{ a.icon }} {{ a.title }}</span>{% empty %}<small>Todavía ninguno.</small>{% endfor %}</div></div>
+  </div>
+</div>
+
+{% elif tab == 'medidas' %}
+<div class="card">
+  <div class="card-head"><h3>Mediciones</h3><small>Se cargan desde la app (modelo 3D) por el alumno o su entrenador.</small></div>
+  <div class="table-wrap"><table class="t"><thead><tr><th>Fecha</th><th>Peso</th><th>IMC</th><th>% grasa</th><th>Método</th><th>Masa magra</th><th>FFMI</th><th>Cuello</th><th>Cintura</th><th>Abdomen</th><th>Cadera</th><th>Brazo der.</th><th>Muslo der.</th></tr></thead><tbody>
+  {% for x in measurements %}<tr><td>{{ x.date|date:"d/m/Y" }}</td><td>{{ x.weight_kg|default:"—" }}</td><td>{{ x.bmi|default:"—" }}</td><td><b>{{ x.body_fat|default:"—" }}</b></td><td><small>{{ x.body_fat_method }}</small></td><td>{{ x.lean_mass|default:"—" }}</td><td>{{ x.ffmi|default:"—" }}</td><td>{{ x.neck|default:"—" }}</td><td>{{ x.waist|default:"—" }}</td><td>{{ x.abdomen|default:"—" }}</td><td>{{ x.hip|default:"—" }}</td><td>{{ x.arm_right|default:"—" }}</td><td>{{ x.thigh_right|default:"—" }}</td></tr>
+  {% empty %}<tr><td colspan="13"><div class="empty">Sin mediciones.</div></td></tr>{% endfor %}</tbody></table></div>
+</div>
+{% if photos %}<div class="card"><h3 style="margin-bottom:10px">Fotos de progreso</h3><div class="row">{% for p in photos %}<a href="{{ p.image.url }}" target="_blank"><img src="{{ p.image.url }}" style="width:120px;height:160px;object-fit:cover;border-radius:12px"><br><small>{{ p.date|date:"d/m/Y" }} · {{ p.get_pose_display }}</small></a>{% endfor %}</div></div>{% endif %}
+{% endif %}
+{% endblock %}
